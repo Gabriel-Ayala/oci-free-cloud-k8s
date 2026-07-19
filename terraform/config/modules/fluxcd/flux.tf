@@ -32,6 +32,13 @@ resource "kubernetes_secret" "git_auth" {
   type = "Opaque"
 }
 
+locals {
+  flux_sync_auth = var.git_auth_enabled ? join("\n", [
+    "    provider: github",
+    "    pullSecret: flux-instance-config",
+  ]) : "    provider: generic"
+}
+
 // Configure the Flux instance.
 resource "helm_release" "flux_instance" {
   depends_on = [helm_release.flux_operator]
@@ -58,8 +65,7 @@ instance:
     url: ${var.git_url}
     path: gitops/core
     ref: "refs/heads/main"
-    provider: github
-    pullSecret: flux-instance-config
+${local.flux_sync_auth}
 YAML
   ]
 }

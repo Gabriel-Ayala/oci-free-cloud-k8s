@@ -73,20 +73,44 @@ This repo hosts my personal stuff and is a playground for my kubernetes tooling.
 - [x] [S3 Proxy](https://github.com/oxyno-zeta/s3-proxy) for http access of buckets
 
 # :keyboard: Setup
-> [!Note]
-> I've recently updated the tf-backend config,  to utilizes the oci native
-> backend now. This requires terraform >= v1.12
 
-This setup uses terraform to manage the oci **and** a bit of the kubernetes part.
+## Minimal deployment
+
+The repository includes a minimal profile for a fresh personal fork. It creates
+the OKE cluster, installs Flux, and deploys metrics-server. Vault, DNS,
+Ingress, Grafana, webhooks, and the application stack are disabled until their
+credentials and domain-specific values have been configured.
+
+Copy `.env.example` to `.env`, fill in the OCI values, then run:
+
+```sh
+./scripts/deploy-minimal.sh
+export KUBECONFIG="$PWD/terraform/.kube.config"
+kubectl get nodes
+kubectl get pods -A
+```
+
+The script uses local OpenTofu state (`-backend=false`) and defaults to two
+1 OCPU / 6 GiB worker nodes. The full application profile is retained in
+`gitops/core/kustomization.full.yaml` and requires Vault secrets, DNS,
+certificates, domain names, GitHub credentials, and an OCI load-balancer
+security group.
+
+> [!Note]
+> The default profile uses local OpenTofu state. The Terraform-native OCI
+> backend was removed because OpenTofu does not support that backend type.
+
+This setup uses OpenTofu to manage the OCI **and** a bit of the Kubernetes part.
 
 ## Tooling on the client side
 
-* terraform
+* OpenTofu
 * oci-binary
 * `oci setup config` successfully run
 
-The terraform state is pushed to oracle object storage (free as well). For that
-we have to create a bucket initially:
+The default OpenTofu state is local. For shared or long-lived deployments,
+configure OpenTofu's S3-compatible backend against OCI Object Storage and
+create a bucket initially:
 ```
 ❯ oci os bucket create --name terraform-states --versioning Enabled --compartment-id xxx
 ```
@@ -105,12 +129,14 @@ aws_access_key_id = xxx <- this needs to be created via UI: User -> customer sec
 aws_secret_access_key = xxx <- this needs to be created via UI: User -> customer secret key
 
 ```
-Refer to my [backend config](./terraform/infra/_terraform.tf) for the terraform s3 configuration.
+The original Terraform-native OCI backend was removed because it is not
+supported by OpenTofu. Keep local state for the minimal profile, or add an S3
+backend configuration for your tenancy.
 
-## 🏗️ Terraform Layout
-* The infrastructure (everything to an usable k8s-api endpoint) is managed by
-terraform in [infra](terraform/infra/)
-* The k8s-modules (OCI specific config for secrets etc.) are managed by terraform in [config](terraform/config/)
+## 🏗️ OpenTofu Layout
+* The infrastructure (everything to a usable Kubernetes API endpoint) is managed by
+OpenTofu in [infra](terraform/infra/)
+* The Kubernetes modules (OCI-specific config for secrets etc.) are managed by OpenTofu in [config](terraform/config/)
 * The k8s apps/config is done with flux; see below
 
 These components are independent from each other, but obv. the infra should
@@ -126,18 +152,18 @@ Running the `config` section you need more variables, which either get output
 by the `infra`-run or have to be extracted from the webui.
 
 > [!TIP]
-> During the initial provisioning the terraform run of `config` might fail,
+> During the initial provisioning the OpenTofu run of `config` might fail,
 > it's trying to create a `ClusterSecretStore` which only exist after the
 > initial deployment of `external secrets` with flux. This is expected.
-> Just rerun terraform after external secrets is successfully deployed.
+> Just rerun OpenTofu after external secrets is successfully deployed.
 
 ## Kubernets Access - kubeconfig
-After running terraform in the [infra](./terraform/infra) folder, a kubeconfig file
-should be created in the terraform folder called `.kube.config`.
+After running OpenTofu in the [infra](./terraform/infra) folder, a kubeconfig file
+should be created in the `terraform` folder called `.kube.config`.
 This can be used to access the cluster.
 For a more regulated access, see the Teleport section below.
 
-The terraform resources in the [config](./terraform/config) folder will rely on the kubeconfig.
+The OpenTofu resources in the [config](./terraform/config) folder will rely on the kubeconfig.
 
 ## FluxCD
 Most resources and core components of the k8s cluster are provisioned with fluxcd.
@@ -238,7 +264,7 @@ I chose the [envoy-gateway][envoy-gateway] implementation, as they feature
 With orcale providing a layer 7 loadbalancer, the oci-controller needs to
 know which securitygroup should be associated with the lb. This is done by
 annotating the Service. Using envoy, we have to add the annotations on an
-`EnvoyProxy` CR. Unfortunately the value for the sg is created via terraform,
+`EnvoyProxy` CR. Unfortunately the value for the security group is created via OpenTofu,
 but is later needed on the object. In the past i used to write it in a configmap,
 and helm was able to use the CM as value.yaml and annotated the resource.
 This is now no longer possible, therefore the sg is currently hardcoded.
@@ -315,14 +341,14 @@ before updating the nodepool.
 The commands should be executed inside [terraform/infra/](terraform/infra)
 ```
 # get new cluster versions
-❯ oci ce cluster get --cluster-id $(terraform output --raw k8s_cluster_id) | jq -r '.data."available-kubernetes-upgrades"'
+❯ oci ce cluster get --cluster-id $(tofu output --raw k8s_cluster_id) | jq -r '.data."available-kubernetes-upgrades"'
 
 # update the cluster version with the information from above
-❯ sed -i '' 's/default = "'$(terraform output --raw kubernetes_version)'"/default = "v1.31.1"/' _variables.tf
+❯ sed -i '' 's/default = "'$(tofu output --raw kubernetes_version)'"/default = "v1.31.1"/' _variables.tf
 
 # upgrade the controlplane and the nodepool & images
 # this shouldn't roll the nodes and might take around 10mins
-❯ terraform apply
+❯ tofu apply
 ```
  To roll the nodes, i cordon & drain the k8s node:
 ```

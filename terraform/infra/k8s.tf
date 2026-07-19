@@ -43,7 +43,7 @@ data "oci_containerengine_node_pool_option" "node_pool_options" {
 
 data "jq_query" "latest_image" {
   data  = jsonencode({ sources = jsondecode(jsonencode(data.oci_containerengine_node_pool_option.node_pool_options.sources)) })
-  query = "[.sources[] | select(.source_name | test(\".*aarch.*OKE-${replace(var.kubernetes_version, "v", "")}.*\")?) .image_id][0]"
+  query = "[.sources[] | select(.source_name | test(\".*${var.worker_image_pattern}.*OKE-${replace(var.kubernetes_version, "v", "")}-.*\")?) .image_id][0]"
 }
 
 resource "oci_containerengine_node_pool" "k8s_node_pool" {
@@ -57,29 +57,27 @@ resource "oci_containerengine_node_pool" "k8s_node_pool" {
   }
 
   node_config_details {
-    placement_configs {
-      availability_domain = data.oci_identity_availability_domains.ads.availability_domains[0].name
-      subnet_id           = oci_core_subnet.vcn_private_subnet.id
-    }
+    dynamic "placement_configs" {
+      for_each = data.oci_identity_availability_domains.ads.availability_domains
 
-    placement_configs {
-      availability_domain = data.oci_identity_availability_domains.ads.availability_domains[1].name
-      subnet_id           = oci_core_subnet.vcn_private_subnet.id
-    }
-
-    placement_configs {
-      availability_domain = data.oci_identity_availability_domains.ads.availability_domains[2].name
-      subnet_id           = oci_core_subnet.vcn_private_subnet.id
+      content {
+        availability_domain = placement_configs.value.name
+        subnet_id            = oci_core_subnet.vcn_private_subnet.id
+      }
     }
 
     size = var.kubernetes_worker_nodes
   }
 
-  node_shape = "VM.Standard.A1.Flex"
+  node_shape = var.worker_shape
 
-  node_shape_config {
-    memory_in_gbs = 12
-    ocpus         = 2
+  dynamic "node_shape_config" {
+    for_each = var.worker_shape == "VM.Standard.A1.Flex" ? [1] : []
+
+    content {
+      memory_in_gbs = var.worker_memory_in_gbs
+      ocpus         = var.worker_ocpus
+    }
   }
   node_source_details {
     image_id    = jsondecode(data.jq_query.latest_image.result)

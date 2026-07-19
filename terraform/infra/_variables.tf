@@ -31,3 +31,27 @@ variable "kubernetes_worker_nodes" {
 
   default = 2
 }
+
+variable "worker_ocpus" {
+  description = "OCPUs per worker node"
+  type        = number
+  default     = 1
+}
+
+variable "worker_memory_in_gbs" {
+  description = "Memory per worker node in GiB"
+  type        = number
+  default     = 6
+}
+
+variable "worker_shape" {
+  description = "OCI compute shape for worker nodes"
+  type        = string
+  default     = "VM.Standard.A1.Flex"
+}
+
+variable "worker_image_pattern" {
+  description = "Regular-expression fragment used to select the worker image"
+  type        = string
+  default     = "aarch"
+}

@@ -34,6 +34,9 @@ override.tf.json
 .terraformrc
 terraform.rc
 
+# Local deployment environment
+.env
+
 .kube.config
 
 # Swap

@@ -3,9 +3,5 @@ terraform {
     oci = {
       source = "oracle/oci"
     }
-
-    kubectl = {
-      source = "gavinbunney/kubectl"
-    }
   }
 }

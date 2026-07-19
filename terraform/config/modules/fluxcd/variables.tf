@@ -6,7 +6,7 @@ variable "gh_token" {
 variable "gh_org" {
   type = string
 
-  default = "nce"
+  default = "Gabriel-Ayala"
 }
 
 variable "gh_repository" {
@@ -39,12 +39,22 @@ variable "github_app_pem" {
   default     = ""
 }
 
+variable "git_auth_enabled" {
+  type    = bool
+  default = false
+}
+
+variable "enable_github_webhook" {
+  type    = bool
+  default = false
+}
+
 variable "git_url" {
   description = "Git repository URL"
   type        = string
   nullable    = false
 
-  default = "https://github.com/nce/oci-free-cloud-k8s.git"
+  default = "https://github.com/Gabriel-Ayala/oci-free-cloud-k8s.git"
 }
 
 variable "flux_version" {

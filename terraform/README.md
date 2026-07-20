@@ -3,7 +3,7 @@ I decided to split the OpenTofu provisioning in two parts.
 
 * [live/oci](../live/oci/) for Terragrunt stack orchestration
 * [modules](modules/) for the shared DRG, per-cluster networking, and OKE resources
-* [cluster-config](config/) for everything depending on a k8s API
+* [config](config/) for everything depending on a Kubernetes API
 
 The recommended deployment order is:
 

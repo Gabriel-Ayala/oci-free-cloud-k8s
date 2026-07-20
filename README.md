@@ -153,6 +153,10 @@ shared manifests from `gitops/core` where appropriate. The tools root deploys:
 - Contour Gateway API ingress with an OCI LoadBalancer
 - Grafana
 
+The staging and production roots additionally deploy ExternalDNS. ExternalDNS
+is intentionally not included in the current minimal tools root; the tools
+cluster can host tooling and Grafana without managing application DNS.
+
 The full stack under `gitops/core/kustomization.full.yaml` is intentionally not
 enabled by the minimal roots. Enable additional components only after supplying
 their required domains, credentials, storage, and OCI integrations.
@@ -174,9 +178,10 @@ Contour HelmRelease and Gateway API CRDs first; `contour-gateway` then creates
 the GatewayClass, Gateway, and certificate after those CRDs and cert-manager
 are ready.
 
-The shared Gateway listens on HTTP and HTTPS for `*.hackyard.dev`. HTTPS uses the
-existing cert-manager `letsencrypt` ClusterIssuer and the Cloudflare DNS01
-token stored in OCI Vault. Applications should use `HTTPRoute` resources with:
+The shared Gateway listens on HTTP and HTTPS for `*.hackyard.dev` in every
+cluster. HTTPS uses the cert-manager `letsencrypt` ClusterIssuer and the
+Cloudflare DNS01 token stored in OCI Vault. Applications should use
+`HTTPRoute` resources with:
 
 ```yaml
 parentRefs:
@@ -205,10 +210,11 @@ Cloudflare policy have been reviewed.
 
 ## ExternalDNS
 
-Each cluster runs ExternalDNS in the `external-dns` namespace. The staging and
-production roots use the shared provider configuration from
-`gitops/core/external-dns/resources`, while the tools root also installs the
-shared ExternalDNS configuration through its core profile.
+Staging and production run ExternalDNS in the `external-dns` namespace. Both
+roots use the self-contained provider configuration from
+`gitops/core/external-dns/resources`; this avoids coupling their Flux paths to
+the full shared profile. The current minimal tools root does not include
+ExternalDNS.
 
 ExternalDNS manages Cloudflare records for `hackyard.dev` from Kubernetes
 Services, Ingresses, and Gateway API `HTTPRoute` resources. It uses the
@@ -254,8 +260,10 @@ kubectl get externalsecret -A
 ## Grafana in tools
 
 Grafana is a standalone HelmRelease in the `grafana` namespace. It uses a
-ClusterIP service, local basic authentication, disabled persistence, and the
-OCI Metrics datasource plugin. No public ingress is configured.
+ClusterIP service behind the tools Contour Gateway, local basic authentication,
+disabled persistence, and the OCI Metrics datasource plugin. Its public route
+is `https://grafana-inova.hackyard.dev`; Cloudflare DNS must point that name to
+the tools Contour load-balancer address.
 
 Access it locally with:
 
@@ -268,6 +276,12 @@ Then open `http://127.0.0.1:3000`. The health endpoint can be tested with:
 
 ```sh
 curl http://127.0.0.1:3000/api/health
+```
+
+The public route can be checked after DNS and certificate propagation with:
+
+```sh
+curl -I https://grafana-inova.hackyard.dev/
 ```
 
 The Grafana OCI IAM policy is managed by Terraform. Review and tighten the

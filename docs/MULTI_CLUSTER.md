@@ -58,7 +58,7 @@ terraform/.kube.production.config
 
 | Cluster | OKE type | VCN CIDR | Pod CIDR | Service CIDR | Workers | Kubeconfig |
 |---|---|---|---|---|---:|---|
-| tools | `ENHANCED_CLUSTER` | `10.10.0.0/16` | `10.244.0.0/16` | `10.96.0.0/16` | 2 | `.kube.tools.config` |
+| tools | `BASIC_CLUSTER` | `10.10.0.0/16` | `10.244.0.0/16` | `10.96.0.0/16` | 2 | `.kube.tools.config` |
 | staging | `ENHANCED_CLUSTER` | `10.20.0.0/16` | `10.245.0.0/16` | `10.97.0.0/16` | 2 | `.kube.staging.config` |
 | production | `ENHANCED_CLUSTER` | `10.30.0.0/16` | `10.246.0.0/16` | `10.98.0.0/16` | 2 | `.kube.production.config` |
 
@@ -252,8 +252,9 @@ ClusterIP service and an admin password synchronized from the OCI Vault secret
 `grafana-tools-admin-password`; the password is not stored in Git.
 
 The tools Grafana currently uses local basic authentication and the OCI Metrics
-datasource plugin. It does not expose a public ingress and does not yet include
-the full Prometheus/Alertmanager stack.
+datasource plugin. It is exposed through the tools Contour Gateway at
+`https://grafana-inova.hackyard.dev` and does not include the full
+Prometheus/Alertmanager stack.
 
 To access it locally:
 
@@ -261,6 +262,13 @@ To access it locally:
 export KUBECONFIG="$PWD/terraform/.kube.tools.config"
 kubectl -n grafana port-forward svc/grafana 3000:80
 curl http://127.0.0.1:3000/api/health
+```
+
+The tools public route requires the Cloudflare `grafana-inova` record to point
+to the tools Contour load balancer. Validate it with:
+
+```sh
+curl -I https://grafana-inova.hackyard.dev/
 ```
 
 The Flux path change and manifests must be committed and pushed to the Git
@@ -313,6 +321,39 @@ kubectl get gatewayclass contour
 kubectl -n contour get gateway contour
 kubectl -n contour get deploy,svc,pods
 kubectl get httproute -A
+```
+
+### ExternalDNS in staging and production
+
+Staging and production each run a separate ExternalDNS deployment in the
+`external-dns` namespace. Their Flux roots reference
+`gitops/core/external-dns/resources`, which contains the namespace,
+Cloudflare-backed HelmRelease, and an ExternalSecret that reads the
+`cloudflare-api-token` key from the shared OCI Vault through the
+`oracle-vault` ClusterSecretStore.
+
+ExternalDNS is restricted to the `hackyard.dev` zone and manages A records
+from Services, Ingresses, CRD sources, and Gateway API HTTPRoutes. It uses
+`sync` policy and excludes targets in `10.0.0.0/8`, so route annotations and
+generated records must be reviewed before exposing workloads. The current
+minimal tools root does not deploy ExternalDNS.
+
+Check the DNS controller and its secret synchronization in either cluster:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.staging.config"
+kubectl -n external-dns get pods
+kubectl -n external-dns get helmrelease external-dns
+kubectl -n external-dns get externalsecret external-secrets
+kubectl -n external-dns logs deploy/external-dns
+```
+
+No application record is expected until a workload publishes a supported
+annotated Service, Ingress, or HTTPRoute. The Contour load-balancer addresses
+are cluster-specific and can be found with:
+
+```sh
+kubectl -n contour get svc contour-envoy
 ```
 
 The former Envoy Gateway and its Envoy-specific OIDC `SecurityPolicy` objects
@@ -386,7 +427,7 @@ done
 - Local state is suitable for a personal deployment but not ideal for team
   operations. Move each stack to a locked remote backend before collaboration.
 - The `tools` minimal profile installs Flux, metrics-server, External Secrets,
-  and standalone Grafana; the full observability stack still requires its
+  Contour, and standalone Grafana; the full observability stack still requires its
   Prometheus/Alertmanager secrets, domains, persistence, and integrations.
 - The current network model allows private VCN routing but does not configure
   cross-cluster service discovery.

@@ -169,6 +169,11 @@ published through an OCI LoadBalancer Service. The LoadBalancer receives the
 OCI network security group from the Terraform `ingress` module when
 `TF_VAR_enable_ingress=true`.
 
+Flux applies this in two stages: the `contour` Kustomization installs the
+Contour HelmRelease and Gateway API CRDs first; `contour-gateway` then creates
+the GatewayClass, Gateway, and certificate after those CRDs and cert-manager
+are ready.
+
 The shared Gateway listens on HTTP and HTTPS for `*.nce.wtf`. HTTPS uses the
 existing cert-manager `letsencrypt` ClusterIssuer and the Cloudflare DNS01
 token stored in OCI Vault. Applications should use `HTTPRoute` resources with:

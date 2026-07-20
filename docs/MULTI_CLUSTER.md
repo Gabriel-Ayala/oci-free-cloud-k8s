@@ -281,6 +281,12 @@ The three cluster roots each install the shared Contour configuration from
 - Envoy replicas exposed by an OCI `LoadBalancer` Service; and
 - an HTTP and HTTPS listener for `*.nce.wtf`.
 
+The Flux resources are deliberately staged. `contour` installs the Helm chart
+and its Gateway API CRDs first. `contour-gateway` depends on that Kustomization
+and cert-manager-issuer before applying the GatewayClass, Gateway, and
+certificate. This prevents Flux dry-run validation from evaluating
+`GatewayClass` before the CRD exists.
+
 The HTTPS listener depends on the per-cluster cert-manager and issuer
 Kustomizations. The certificate is issued through Cloudflare DNS01 using the
 Cloudflare token already expected in OCI Vault under `cloudflare-api-token`.

@@ -7,4 +7,5 @@ resources:
   - cert-manager.yaml
   - cert-manager-issuer.yaml
   - contour.yaml
+  - contour-gateway.yaml
   - grafana/flux.yaml

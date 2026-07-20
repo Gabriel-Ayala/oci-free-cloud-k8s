@@ -16,3 +16,4 @@ resources:
   - fluxcd-addons/flux.yaml
   - s3-proxy/flux.yaml
   - contour/flux.yaml
+  - contour-gateway/flux.yaml

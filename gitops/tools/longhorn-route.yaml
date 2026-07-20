@@ -1,0 +1,20 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: longhorn-route
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./gitops/tools/longhorn-route
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: longhorn
+    - name: contour-gateway
+  healthChecks:
+    - apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      name: longhorn
+      namespace: longhorn

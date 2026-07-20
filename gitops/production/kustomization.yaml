@@ -4,6 +4,7 @@ namespace: flux-system
 resources:
   - metrics-server.yaml
   - external-secrets.yaml
+  - external-dns.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml
   - contour.yaml

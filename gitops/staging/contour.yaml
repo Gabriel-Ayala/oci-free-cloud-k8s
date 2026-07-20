@@ -17,7 +17,3 @@ spec:
       kind: Deployment
       name: contour-contour
       namespace: contour
-    - apiVersion: apps/v1
-      kind: Deployment
-      name: contour-envoy
-      namespace: contour

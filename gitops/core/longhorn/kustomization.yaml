@@ -4,5 +4,4 @@ namespace: longhorn
 resources:
   - namespace.yaml
   - helm.yaml
-  - secret.yaml
   - httproute.yaml

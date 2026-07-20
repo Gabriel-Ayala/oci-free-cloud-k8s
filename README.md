@@ -161,6 +161,9 @@ The full stack under `gitops/core/kustomization.full.yaml` is intentionally not
 enabled by the minimal roots. Enable additional components only after supplying
 their required domains, credentials, storage, and OCI integrations.
 
+Longhorn is an exception: it is enabled explicitly in all three cluster roots
+as the baseline distributed block storage layer.
+
 Flux reads the configured remote Git repository. Changes made locally do not
 become persistent Flux state until they are committed and pushed to the branch
 configured in the Flux source.
@@ -235,6 +238,39 @@ No DNS record is created for a cluster until an application publishes a
 supported, annotated route or service. The Contour LoadBalancer addresses are
 cluster-specific; use the address shown by `kubectl -n contour get svc
 contour-envoy` when validating the resulting Cloudflare record.
+
+## Longhorn storage
+
+Longhorn is deployed in the `longhorn` namespace in tools, staging, and
+production. The HelmRelease uses Longhorn `1.11.1`, the V1 data engine, two
+replicas per volume, and the node path `/var/lib/longhorn`. Its `longhorn`
+StorageClass is the default class in each cluster. The Longhorn UI is kept
+private; no public HTTPRoute is installed.
+
+OKE Oracle Linux nodes must have `iscsi-initiator-utils`, `nfs-utils`,
+`cryptsetup`, and `device-mapper` installed, with `iscsid` enabled and the
+`iscsi_tcp` kernel module loaded. The node-pool bootstrap enforces this for new
+nodes. Longhorn currently uses the worker boot volume as its storage disk;
+dedicated block volumes should be added and configured before production data
+is placed on this platform.
+
+Verify Longhorn in a cluster with:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl -n flux-system get kustomization longhorn
+kubectl -n longhorn get pods
+kubectl get storageclass longhorn
+kubectl -n longhorn get nodes.longhorn.io -o wide
+kubectl -n longhorn get engineimages.longhorn.io -o wide
+```
+
+For a smoke test, create a temporary PVC and Pod using
+`storageClassName: longhorn`, write a marker to the mounted volume, recreate
+the Pod, and verify the marker remains. Remove the temporary namespace after
+the test. Do not use the boot-disk-backed default for production workloads
+until capacity, replication, backup, and failure-recovery procedures are
+reviewed.
 
 ## External Secrets and OCI Vault
 

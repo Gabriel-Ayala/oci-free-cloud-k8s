@@ -37,8 +37,8 @@ production -> gitops/production
 ```
 
 The current minimal profiles install metrics-server, External Secrets,
-cert-manager, Contour, and the cluster-specific additions. Tools also installs
-Grafana. Staging and production install ExternalDNS. The optional
+cert-manager, Contour, and Longhorn. Tools also installs Grafana. Staging and
+production install ExternalDNS. The optional
 `gitops/core/kustomization.full.yaml` profile contains additional services and
 must only be enabled after their credentials, domains, storage, and IAM are
 provided.
@@ -84,16 +84,24 @@ are scoped to the cluster, namespace, service account, and Vault. The tools
 Instance Principal policy is node-level and should be tightened if other
 workloads share the compartment.
 
-## Observability and optional services
+## Storage, observability, and optional services
+
+Longhorn is deployed in all three clusters with its V1 data engine, two
+replicas per volume, and `/var/lib/longhorn` as the default disk. The
+`longhorn` StorageClass is default in each cluster. The node bootstrap enables
+the required iSCSI service and installs the NFS/cryptsetup/device-mapper
+packages. The current disk is the worker boot volume; production requires a
+dedicated storage-disk design and backup/recovery runbook before using it for
+important data. The Longhorn UI is not publicly routed.
 
 The deployed tools baseline includes standalone Grafana with the OCI Metrics
 datasource plugin, local basic authentication, no persistent volume, and a
 Contour route. The full Prometheus/Alertmanager stack is present only in the
 optional core profile and requires its own secrets, storage, and routes.
 
-The full profile also contains Longhorn, Dex, Teleport, S3 proxy, Lychee, and
-Flux add-ons. These are not part of the current minimal cluster roots and are
-not considered deployed until explicitly enabled and validated.
+The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
+add-ons. These are not part of the current minimal cluster roots and are not
+considered deployed until explicitly enabled and validated.
 
 ## Cost and security boundaries
 

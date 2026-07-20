@@ -44,3 +44,4 @@ spec:
     extraArgs:
       - --exclude-target-net=10.0.0.0/8
       - --domain-filter=hackyard.dev
+      - --txt-owner-id=${EXTERNALDNS_TXT_OWNER_ID:=core}

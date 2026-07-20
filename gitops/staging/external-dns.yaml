@@ -17,3 +17,6 @@ spec:
       kind: Deployment
       name: external-dns
       namespace: external-dns
+  postBuild:
+    substitute:
+      EXTERNALDNS_TXT_OWNER_ID: staging

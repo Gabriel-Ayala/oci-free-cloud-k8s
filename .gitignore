@@ -1,5 +1,9 @@
 # Local .terraform directories
 **/.terraform/*
+**/.terragrunt-cache/*
+live/**/.terraform.lock.hcl
+**/provider.tf
+**/backend.tf
 .DS_Store
 
 # .tfstate files
@@ -38,6 +42,7 @@ terraform.rc
 .env
 
 .kube.config
+.kube.*.config
 
 # Swap
 [._]*.s[a-v][a-z]

@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "storage.nce.wtf"
+    - "storage.hackyard.dev"
   rules:
     - matches:
         - path:

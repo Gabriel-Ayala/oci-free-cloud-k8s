@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "prometheus.nce.wtf"
+    - "prometheus.hackyard.dev"
   rules:
     - matches:
         - path:

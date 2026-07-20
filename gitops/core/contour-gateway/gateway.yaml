@@ -13,14 +13,14 @@ spec:
   gatewayClassName: contour
   listeners:
     - name: http
-      hostname: "*.nce.wtf"
+      hostname: "*.hackyard.dev"
       protocol: HTTP
       port: 80
       allowedRoutes:
         namespaces:
           from: All
     - name: https
-      hostname: "*.nce.wtf"
+      hostname: "*.hackyard.dev"
       protocol: HTTPS
       port: 443
       allowedRoutes:
@@ -30,4 +30,4 @@ spec:
         mode: Terminate
         certificateRefs:
           - kind: Secret
-            name: wildcard-nce-wtf-tls-cert
+            name: wildcard-hackyard-dev-tls-cert

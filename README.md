@@ -174,7 +174,7 @@ Contour HelmRelease and Gateway API CRDs first; `contour-gateway` then creates
 the GatewayClass, Gateway, and certificate after those CRDs and cert-manager
 are ready.
 
-The shared Gateway listens on HTTP and HTTPS for `*.nce.wtf`. HTTPS uses the
+The shared Gateway listens on HTTP and HTTPS for `*.hackyard.dev`. HTTPS uses the
 existing cert-manager `letsencrypt` ClusterIssuer and the Cloudflare DNS01
 token stored in OCI Vault. Applications should use `HTTPRoute` resources with:
 

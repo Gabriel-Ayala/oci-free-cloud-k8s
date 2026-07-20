@@ -279,7 +279,7 @@ The three cluster roots each install the shared Contour configuration from
 - Contour with the Gateway API CRDs;
 - a `contour` GatewayClass and Gateway in the `contour` namespace;
 - Envoy replicas exposed by an OCI `LoadBalancer` Service; and
-- an HTTP and HTTPS listener for `*.nce.wtf`.
+- an HTTP and HTTPS listener for `*.hackyard.dev`.
 
 The Flux resources are deliberately staged. `contour` installs the Helm chart
 and its Gateway API CRDs first. `contour-gateway` depends on that Kustomization

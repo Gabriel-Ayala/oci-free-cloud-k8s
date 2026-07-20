@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "s3.nce.wtf"
+    - "s3.hackyard.dev"
   rules:
     - matches:
         - path:

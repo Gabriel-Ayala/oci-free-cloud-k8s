@@ -1,11 +1,11 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-nce-wtf
+  name: wildcard-hackyard-dev
 spec:
   dnsNames:
-    - "*.nce.wtf"
+    - "*.hackyard.dev"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
-  secretName: wildcard-nce-wtf-tls-cert
+  secretName: wildcard-hackyard-dev-tls-cert

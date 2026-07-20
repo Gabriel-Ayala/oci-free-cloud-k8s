@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "flux-webhook.nce.wtf"
+    - "flux-webhook.hackyard.dev"
   rules:
     - matches:
         - path:

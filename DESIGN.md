@@ -55,7 +55,9 @@ ExternalDNS is enabled in staging and production. It watches Services,
 Ingresses, CRD sources, and Gateway API HTTPRoutes, is filtered to the
 `hackyard.dev` zone, and manages A records with `sync` policy. The tools
 Grafana route uses `grafana-inova.hackyard.dev`; its Cloudflare record is
-managed outside the current minimal tools ExternalDNS profile.
+managed outside the current minimal tools ExternalDNS profile. ExternalDNS
+uses a unique TXT owner ID per cluster so staging and production do not manage
+or delete each other’s records.
 
 Contour routes must reference the shared Gateway:
 
@@ -92,7 +94,10 @@ replicas per volume, and `/var/lib/longhorn` as the default disk. The
 the required iSCSI service and installs the NFS/cryptsetup/device-mapper
 packages. The current disk is the worker boot volume; production requires a
 dedicated storage-disk design and backup/recovery runbook before using it for
-important data. The Longhorn UI is not publicly routed.
+important data. Each cluster exposes the UI through its own route:
+`storage-tools.hackyard.dev`, `storage-staging.hackyard.dev`, or
+`storage-production.hackyard.dev`. This administrative surface must be
+protected before general use.
 
 The deployed tools baseline includes standalone Grafana with the OCI Metrics
 datasource plugin, local basic authentication, no persistent volume, and a

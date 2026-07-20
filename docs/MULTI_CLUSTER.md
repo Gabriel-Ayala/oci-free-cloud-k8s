@@ -329,7 +329,12 @@ The tools, staging, and production roots each install Longhorn from
 `gitops/core/longhorn`. The deployment uses chart version `1.11.1`, the V1
 data engine, two replicas per volume, and the default disk at
 `/var/lib/longhorn` on each worker. It creates the default `longhorn`
-StorageClass and keeps the Longhorn UI private by omitting a public route.
+StorageClass and exposes the UI through a cluster-specific route:
+`storage-tools.hackyard.dev`, `storage-staging.hackyard.dev`, or
+`storage-production.hackyard.dev`. The tools DNS record is outside the minimal
+tools ExternalDNS profile; staging and production manage their records through
+separate ExternalDNS owner IDs. Protect this administrative UI before general
+use.
 
 The Oracle Linux worker bootstrap installs the Longhorn host dependencies and
 enables `iscsid`/`iscsi_tcp`. Existing nodes must receive the same prerequisite

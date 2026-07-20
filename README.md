@@ -244,8 +244,19 @@ contour-envoy` when validating the resulting Cloudflare record.
 Longhorn is deployed in the `longhorn` namespace in tools, staging, and
 production. The HelmRelease uses Longhorn `1.11.1`, the V1 data engine, two
 replicas per volume, and the node path `/var/lib/longhorn`. Its `longhorn`
-StorageClass is the default class in each cluster. The Longhorn UI is kept
-private; no public HTTPRoute is installed.
+StorageClass is the default class in each cluster. Each cluster has a distinct
+HTTPS route for the Longhorn UI:
+
+```text
+tools      -> https://storage-tools.hackyard.dev
+staging    -> https://storage-staging.hackyard.dev
+production -> https://storage-production.hackyard.dev
+```
+
+The tools DNS record is managed outside the minimal tools ExternalDNS profile;
+staging and production records are managed by their respective ExternalDNS
+instances. The UI is an administrative surface and must be protected before
+being used beyond controlled testing.
 
 OKE Oracle Linux nodes must have `iscsi-initiator-utils`, `nfs-utils`,
 `cryptsetup`, and `device-mapper` installed, with `iscsid` enabled and the

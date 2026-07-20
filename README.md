@@ -203,6 +203,33 @@ The OCI LoadBalancer and public DNS records are billable/externally visible
 resources. Do not expose a route until its hostname, certificate, backend, and
 Cloudflare policy have been reviewed.
 
+## ExternalDNS
+
+Each cluster runs ExternalDNS in the `external-dns` namespace. The staging and
+production roots use the shared provider configuration from
+`gitops/core/external-dns/resources`, while the tools root also installs the
+shared ExternalDNS configuration through its core profile.
+
+ExternalDNS manages Cloudflare records for `hackyard.dev` from Kubernetes
+Services, Ingresses, and Gateway API `HTTPRoute` resources. It uses the
+Cloudflare API token synchronized from OCI Vault by External Secrets, and the
+token is restricted to the `hackyard.dev` zone. The configured policy is
+`sync`, so review route annotations and generated records before exposing a
+workload.
+
+Verify ExternalDNS and its credential synchronization with:
+
+```sh
+kubectl -n external-dns get pods
+kubectl -n external-dns logs deploy/external-dns
+kubectl -n external-dns get externalsecret external-secrets
+```
+
+No DNS record is created for a cluster until an application publishes a
+supported, annotated route or service. The Contour LoadBalancer addresses are
+cluster-specific; use the address shown by `kubectl -n contour get svc
+contour-envoy` when validating the resulting Cloudflare record.
+
 ## External Secrets and OCI Vault
 
 All clusters expose a `ClusterSecretStore` named `oracle-vault`.

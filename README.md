@@ -1,408 +1,296 @@
-# ⎈ Oracle Cloud Kubernetes free tier setup
+# OCI OKE multi-cluster platform
 
-> [!WARNING]
-> **Free Tier Change: 06.2026**
->
-> Oracle changed the free-tier specs from former 4 oCPUS & 24GB
-> down to **2 oCPU and 12GB memory**. Please update your setups to avoid cost
+Infrastructure and GitOps configuration for three Oracle Cloud Infrastructure
+(OCI) Kubernetes Engine (OKE) clusters:
 
-This repository leverages Oracle Cloud's [always free tier][oci-free-tier] to provision a kubernetes cluster.
-In its current setup there are **no monthly costs** anymore, as I've now moved
-the last part (DNS) from oci to cloudflare.
+- `tools` — shared tooling, External Secrets, and Grafana
+- `staging` — pre-production workloads
+- `production` — production workloads
 
-[oci-free-tier]: https://docs.oracle.com/en-us/iaas/Content/FreeTier/freetier_topic-Always_Free_Resources.htm
+Each cluster has its own VCN and two worker nodes. The VCNs are connected
+through one shared Dynamic Routing Gateway (DRG), providing private network
+connectivity between environments without merging their network boundaries.
 
-Oracle Kubernetes Engine (OKE) is free to use, and you only pay for worker
-nodes _if_ you exceed the Always Free tier — which we don’t.
-The free tier provides **2 oCPUs and 12GB of memory**, which are split between two
-worker nodes (`VM.Standard.A1.Flex`), allowing for efficient resource
-utilization. Each node has a 100GB boot volume, with around 60GB available for
-in-cluster storage via Longhorn. For ingress, we use the `GatewayAPI` implementation
-provided by envoy-gateway together with Oracle’s
-Flexible Load Balancer (10Mbps; layer 7). For `teleport` we use the network LB (layer 4).
-In this configuration both load balancers are free to use.
+## Architecture
 
-Getting an Always Free account can sometimes be tricky, but there are several
-guides on Reddit that explain how to speed up the creation process.
+```text
+                         Shared DRG
+                       /     |       \
+                      /      |        \
+              tools VCN  staging VCN  production VCN
+                 |          |             |
+              tools OKE  staging OKE  production OKE
+                 |
+       External Secrets + Grafana
+```
 
-The initial infra setup is inspired by this great tutorial: https://arnoldgalovics.com/free-kubernetes-oracle-cloud/
+| Cluster | OKE type | VCN CIDR | Pod CIDR | Service CIDR | Nodes |
+|---|---|---|---|---|---:|
+| tools | Basic | `10.10.0.0/16` | `10.244.0.0/16` | `10.96.0.0/16` | 2 |
+| staging | Enhanced | `10.20.0.0/16` | `10.245.0.0/16` | `10.97.0.0/16` | 2 |
+| production | Enhanced | `10.30.0.0/16` | `10.246.0.0/16` | `10.98.0.0/16` | 2 |
 
-> [!WARNING]
-> This project uses arm instances, no x86 architecture; due to limitations
-> of the always free tier.
->
-> *And please mind:*
-> This setup is loosely documented and opinionated. It's working and in use
-> by myself. It's public, to showcase how this setup can be recreated, but
-> you need to know what you're doing and where to make modification for yourself.
+The worker nodes use private subnets. The OKE API endpoint and load-balancer
+subnets currently use public subnets; review this before adopting the layout
+for a stricter production network.
 
-This repo hosts my personal stuff and is a playground for my kubernetes tooling.
+The DRG provides IP routing only. It does not provide Kubernetes service
+discovery, pod-network federation, or cross-cluster failover. Keep all VCN,
+pod, and service CIDRs unique.
 
-> [!TIP]
-> In case you want to reproduce another `oke` setup, you might [find this guide](https://github.com/piontec/free-oci-kubernetes)
-> also helpful.
+## Repository layout
 
-## :wrench: Tooling
+```text
+live/oci/
+├── root.hcl
+├── drg/                         Shared DRG Terragrunt stack
+└── clusters/
+    ├── tools/{network,oke,config}
+    ├── staging/{network,oke,config}
+    └── production/{network,oke,config}
 
-- [x] K8s control plane
-- [x] Worker Nodes
-- [x] Ingress with GatewayAPI
-  * envoy-gateway on a layer 7 lb
-  * teleport svc on a layer 4 lb
-  * `httproutes` with oidc protection
-- [x] Certmanager
-  * with letsencrypt setup for cloudflare dns challenge
-- [x] External DNS
-  * with sync to the cloudflare dns management
-  * CR to provide `A` records for my home-network
-- [x] Dex as OIDC Provider
-  * with github as idP
-- [x] FluxCD for Gitops
-  * deployed with the new fluxcd operator
-  * github → flux webhook receiver for instant reconciliation
-  * flux → github commit annotation about conciliation status
-- [x] Teleport for k8s cluster access
-- [x] Storage
-   * with longhorn
-- [x] Grafana with Dex Login
-   * Dashboards for Flux
-   * [ ] Switch to Grafana Operator
-- [ ] Loki for log aggregation
-- [x] Metrics Server for cpu/mem usage overview
-- [ ] Kyverno and Image Signing
-- [x] [S3 Proxy](https://github.com/oxyno-zeta/s3-proxy) for http access of buckets
+terraform/modules/               Reusable DRG, network, and OKE modules
+gitops/core/                     Shared Flux application manifests
+gitops/tools/                    Tools Flux root and Grafana
+gitops/staging/                  Staging Flux root
+gitops/production/               Production Flux root
+scripts/deploy-minimal.sh        Sequential deployment helper
+docs/MULTI_CLUSTER.md            Detailed design and extraction notes
+```
 
-# :keyboard: Setup
+## Requirements
 
-## Minimal deployment
+- OCI account with permissions to manage networking, OKE, IAM, and Vault
+- OCI CLI configured with a profile
+- OpenTofu
+- Terragrunt
+- `kubectl`
+- A Git repository accessible by Flux
 
-The repository includes a minimal profile for a fresh personal fork. It creates
-the OKE cluster, installs Flux, and deploys metrics-server. Vault, DNS,
-Ingress, Grafana, webhooks, and the application stack are disabled until their
-credentials and domain-specific values have been configured.
+Use versions compatible with the existing lock files where possible. The
+configuration currently targets the values in `.env.example`, including the
+configured Kubernetes version, worker shape, and Oracle Linux image pattern.
 
-Copy `.env.example` to `.env`, fill in the OCI values, then run:
+## Configuration
+
+Copy the example environment file and fill in real values:
 
 ```sh
-./scripts/deploy-minimal.sh
-export KUBECONFIG="$PWD/terraform/.kube.config"
+cp .env.example .env
+chmod 600 .env
+```
+
+At minimum, set:
+
+```dotenv
+OCI_REGION=sa-saopaulo-1
+OCI_CONFIG_FILE=/absolute/path/to/.oci/config
+OCI_CONFIG_PROFILE=DEFAULT
+OCI_COMPARTMENT_ID=ocid1.compartment...
+OCI_TENANCY_ID=ocid1.tenancy...
+TF_VAR_kubernetes_version=v1.36.1
+TF_VAR_worker_shape=VM.Standard.E2.1
+TF_VAR_worker_image_pattern=Oracle-Linux-9.7-2026.06.15
+TF_VAR_ssh_public_key=ssh-ed25519...
+```
+
+The tools configuration creates a software-protected OCI Vault and AES key
+when `TF_VAR_vault_id` is not set. Staging and production reuse that Vault;
+the deployment helper resolves its OCID from the tools stack automatically.
+An existing Vault can be supplied explicitly:
+
+```dotenv
+TF_VAR_vault_id=ocid1.vault.oc1...
+```
+
+Flux authentication variables are also read from `.env` when the configuration
+stack needs to create or update the Git source credentials. Never commit `.env`,
+Terraform state, kubeconfigs, private keys, or secret values.
+
+## Deploy
+
+Deploy one cluster at a time. The helper applies the shared DRG, selected VCN,
+OKE cluster, node pool, and Kubernetes/Flux configuration in that order.
+
+```sh
+CLUSTER_NAME=tools ./scripts/deploy-minimal.sh
+CLUSTER_NAME=staging ./scripts/deploy-minimal.sh
+CLUSTER_NAME=production ./scripts/deploy-minimal.sh
+```
+
+The script stops on the first failed stack. Do not run two deployments at the
+same time because the cluster stacks share DRG state and may compete for OCI
+capacity.
+
+For individual stacks:
+
+```sh
+terragrunt --working-dir live/oci/drg plan
+terragrunt --working-dir live/oci/clusters/tools/network plan
+terragrunt --working-dir live/oci/clusters/tools/oke plan
+terragrunt --working-dir live/oci/clusters/tools/config plan
+```
+
+Use `apply` only after reviewing the plan. Local state is currently used by the
+Terragrunt stacks; move to a locked remote backend before team operation.
+
+## Flux and GitOps
+
+Flux is configured with a separate root for each cluster:
+
+| Cluster | Flux sync path |
+|---|---|
+| tools | `gitops/tools` |
+| staging | `gitops/staging` |
+| production | `gitops/production` |
+
+The roots contain cluster-specific Flux `Kustomization` objects and reuse
+shared manifests from `gitops/core` where appropriate. The tools root deploys:
+
+- metrics-server
+- External Secrets integration
+- cert-manager and the Cloudflare DNS01 issuer
+- Contour Gateway API ingress with an OCI LoadBalancer
+- Grafana
+
+The full stack under `gitops/core/kustomization.full.yaml` is intentionally not
+enabled by the minimal roots. Enable additional components only after supplying
+their required domains, credentials, storage, and OCI integrations.
+
+Flux reads the configured remote Git repository. Changes made locally do not
+become persistent Flux state until they are committed and pushed to the branch
+configured in the Flux source.
+
+## Contour ingress
+
+Each cluster installs Contour in the `contour` namespace. Contour manages the
+`contour` GatewayClass and Gateway API resources, while its Envoy data plane is
+published through an OCI LoadBalancer Service. The LoadBalancer receives the
+OCI network security group from the Terraform `ingress` module when
+`TF_VAR_enable_ingress=true`.
+
+The shared Gateway listens on HTTP and HTTPS for `*.nce.wtf`. HTTPS uses the
+existing cert-manager `letsencrypt` ClusterIssuer and the Cloudflare DNS01
+token stored in OCI Vault. Applications should use `HTTPRoute` resources with:
+
+```yaml
+parentRefs:
+  - name: contour
+    namespace: contour
+```
+
+The previous Envoy Gateway resources and Envoy-specific `SecurityPolicy`
+resources are not deployed. Contour does not implement those policies; OIDC
+protection for routes that previously used them must be migrated to an
+application-side proxy such as oauth2-proxy or another Contour-compatible
+external authorization design before enabling those protected routes.
+
+Check the ingress installation and address with:
+
+```sh
+kubectl get gatewayclass contour
+kubectl -n contour get gateway contour
+kubectl -n contour get svc contour-envoy
+kubectl get httproute -A
+```
+
+The OCI LoadBalancer and public DNS records are billable/externally visible
+resources. Do not expose a route until its hostname, certificate, backend, and
+Cloudflare policy have been reviewed.
+
+## External Secrets and OCI Vault
+
+All clusters expose a `ClusterSecretStore` named `oracle-vault`.
+
+- `tools` uses OCI Instance Principal because it is a Basic OKE cluster.
+- `staging` and `production` use OKE Workload Identity.
+
+The tools Grafana administrator password is stored in OCI Vault under the
+secret name `grafana-tools-admin-password`. It is synchronized into the
+`grafana-admin-credentials` Kubernetes Secret by an `ExternalSecret`. Secret
+values are never stored in Git.
+
+Check the integration after deployment:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl get pods -n external-secrets
+kubectl get clustersecretstore oracle-vault
+kubectl get externalsecret -A
+```
+
+## Grafana in tools
+
+Grafana is a standalone HelmRelease in the `grafana` namespace. It uses a
+ClusterIP service, local basic authentication, disabled persistence, and the
+OCI Metrics datasource plugin. No public ingress is configured.
+
+Access it locally with:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl -n grafana port-forward svc/grafana 3000:80
+```
+
+Then open `http://127.0.0.1:3000`. The health endpoint can be tested with:
+
+```sh
+curl http://127.0.0.1:3000/api/health
+```
+
+The Grafana OCI IAM policy is managed by Terraform. Review and tighten the
+dynamic-group matching rule if other compute workloads share the compartment.
+
+## Validation and operations
+
+Format and validate the infrastructure:
+
+```sh
+terragrunt hcl fmt --check live/oci
+tofu -chdir=terraform/config fmt -check
+tofu -chdir=terraform/config validate
+```
+
+Validate the GitOps manifests:
+
+```sh
+kubectl kustomize gitops/tools >/dev/null
+kubectl kustomize gitops/staging >/dev/null
+kubectl kustomize gitops/production >/dev/null
+```
+
+Inspect a deployed cluster:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.staging.config"
 kubectl get nodes
 kubectl get pods -A
+kubectl get kustomizations -n flux-system
+kubectl get events -A --sort-by=.lastTimestamp
 ```
 
-The script uses local OpenTofu state (`-backend=false`) and defaults to two
-1 OCPU / 6 GiB worker nodes. The full application profile is retained in
-`gitops/core/kustomization.full.yaml` and requires Vault secrets, DNS,
-certificates, domain names, GitHub credentials, and an OCI load-balancer
-security group.
+Cluster-specific kubeconfigs are generated at:
 
-> [!Note]
-> The default profile uses local OpenTofu state. The Terraform-native OCI
-> backend was removed because OpenTofu does not support that backend type.
-
-This setup uses OpenTofu to manage the OCI **and** a bit of the Kubernetes part.
-
-## Tooling on the client side
-
-* OpenTofu
-* oci-binary
-* `oci setup config` successfully run
-
-The default OpenTofu state is local. For shared or long-lived deployments,
-configure OpenTofu's S3-compatible backend against OCI Object Storage and
-create a bucket initially:
-```
-❯ oci os bucket create --name terraform-states --versioning Enabled --compartment-id xxx
+```text
+terraform/.kube.tools.config
+terraform/.kube.staging.config
+terraform/.kube.production.config
 ```
 
-With the bucket created we can configure the `~/.oci/config`:
-```
-[DEFAULT]
-user=ocid1.user.xxx
-fingerprint=ee:f4:xxx
-tenancy=ocid1.tenancy.oc1.xxx
-region=eu-frankfurt-1
-key_file=/Users/xxxx.pem
+## Security and cost notes
 
-[default]
-aws_access_key_id = xxx <- this needs to be created via UI: User -> customer secret key
-aws_secret_access_key = xxx <- this needs to be created via UI: User -> customer secret key
+- Review every OpenTofu plan before applying changes.
+- Treat `.env`, `*.tfvars`, Terraform state, kubeconfigs, and OCI credentials as sensitive.
+- Prefer Vault and External Secrets for runtime credentials.
+- Review public API endpoints, public load-balancer subnets, node shapes, storage,
+  and enhanced OKE features against the intended budget and security posture.
+- Use compartment- and cluster-scoped IAM policies wherever possible.
+- The current tools Instance Principal trust boundary is node-level; Workload
+  Identity is the preferred model for workloads requiring narrower access.
 
-```
-The original Terraform-native OCI backend was removed because it is not
-supported by OpenTofu. Keep local state for the minimal profile, or add an S3
-backend configuration for your tenancy.
+## Further documentation
 
-## 🏗️ OpenTofu Layout
-* The infrastructure (everything to a usable Kubernetes API endpoint) is managed by
-OpenTofu in [infra](terraform/infra/)
-* The Kubernetes modules (OCI-specific config for secrets etc.) are managed by OpenTofu in [config](terraform/config/)
-* The k8s apps/config is done with flux; see below
-
-These components are independent from each other, but obv. the infra should
-be created first.
-
-For the config part, you need to add a private `*.tfvars` file:
-```
-compartment_id   = "ocid1.tenancy.zzz"
-... # this list is currently not complete; there's more to add
-```
-
-Running the `config` section you need more variables, which either get output
-by the `infra`-run or have to be extracted from the webui.
-
-> [!TIP]
-> During the initial provisioning the OpenTofu run of `config` might fail,
-> it's trying to create a `ClusterSecretStore` which only exist after the
-> initial deployment of `external secrets` with flux. This is expected.
-> Just rerun OpenTofu after external secrets is successfully deployed.
-
-## Kubernets Access - kubeconfig
-After running OpenTofu in the [infra](./terraform/infra) folder, a kubeconfig file
-should be created in the `terraform` folder called `.kube.config`.
-This can be used to access the cluster.
-For a more regulated access, see the Teleport section below.
-
-The OpenTofu resources in the [config](./terraform/config) folder will rely on the kubeconfig.
-
-## FluxCD
-Most resources and core components of the k8s cluster are provisioned with fluxcd.
-Therefore we need a Github Personal acccess Token (`pat` - fine grained) in your repo.
-```
-# github permission scope for the token:
-contents - read, write
-commit statuses - read, write
-webhooks - read, write
-```
-
-* Place this token in a private tfvars. This is used to
-generate the fluxcd webhook url, which triggers fluxcd reconciliation after each
-commit
-* Place this token in the oci vault (`github-fluxcd-token`). This allows fluxcd
-to annotate the github commit status, depending on the state of the `Kustomization`.
-
-### Fluxcd Operator
-Migrating from the `flux bootstrap` method to the flux-operator might be tricky.
-I lost most installed apps during my upgrade, because i misconfigured the
-`FluxInstace.path` (this could've mitigated by setting `prune: false` on the KS).
-Destroying the old Bootstrap resource during the TF apply, lead
-to the removal of the fluxcd crds like `GitRepo, HelmRelease` etc
-(had the remove the finalizers of the crds
-to allow removal). This didn't impact my already deployed CRs though.
-The Flux Operator takes care of reinstalling everything.
-
-I've setup a Githup App and mostly followed the official guide,
-this was pretty straightforward.
-
-#### Development
-Switching to a feature/dev branch is rather simple, just modify the
-inCluster `FluxInstance` - search for the `sync` block and update the `ref`
-section to the according branch.
-
-## Teleport
-[Teleport](https://goteleport.com/) is my preferred way to access the kuberentes api
-### Prerequisites
-In it's current state, teleport wants to setup a wildcard domain like `*.teleport.example.com` (could be disabled).
-With OracleCloud managing the dns, this is not possible, as `cert-manager` is not
-able to do a `dns01` challenge against orcale dns.
-I've now switched to Cloudflare (also to mitigate costs of a few cents).
-
-The Teleport <-> K8s Role (`k8s/system:masters`) is created by the teleport
-operator (see the `fluxcd-addons/Kustomization`). The SSO setup is created with
-[fluxcd](./gitops/core/teleport/rbac).
-
-### ~Login via local User~ - removed
-I've removed local users in teleport and am using SSO with github as idP.
-
-This might still be useful for local setups not using SSO:
-
-The login process must be `reset` for each user, so that
-password and 2FA can be configured by each user in the WebUI.
-The User can be created via the teleport-operator by creating a `TelepertUser` in
-kubernetes.
-```
-# reset the user once
-❯ k --kubeconfig ~/.kube/oci.kubeconfig exec -n teleport -ti deployment/teleport-cluster-auth -- tctl users reset nce
-
-# login to teleport
-❯ tsh login --proxy teleport.nce.wtf:443 --auth=local --user nce teleport.nce.wt
-```
-
-### Login via Github
-There's no user management in teleport, so no reset, or 2FA setup is needed.
-```
-❯ tsh login --proxy teleport.nce.wtf:443 --auth=github-acme --user nce teleport.nce.wtf
-
-# login to the k8s cluster
-❯ tsh kube login oci
-
-# test
-❯ k get po -n teleport
-```
-
-### Certificates
-The x509 certs are managed by `cert-manager`. With the dns management done by
-cloudflare, i've removed all `http01` challenges. The renewal process with
-`http01` and cloudflare is [out of the box not possible][cert-manager-cloudflare]
-
-Switching to `dns` challenge solves this issue.
-
-### Known Issues
-```
-❯ tsh kube login oci
-ERROR: connection error: desc = "transport: authentication handshake failed: tls: failed to verify certificate: x509: certificate signed by unknown authority"
-```
-When reinstalling teleport, during a logged in session happens, the tsh Client
-throws this error. A logout & login has to happen.
-
-## Gateway API - Loadbalancer setup
-With the recent deprecation of the `nginx-ingress` project, i [switched][pr] to
-[GatewayAPI][gatewayapi]. All `ingress` resources are replaced by `httproutes`.
-I chose the [envoy-gateway][envoy-gateway] implementation, as they feature
-`SecurityPolicies` which allow the protection of `httproutes` with OIDC auth.
-
-With orcale providing a layer 7 loadbalancer, the oci-controller needs to
-know which securitygroup should be associated with the lb. This is done by
-annotating the Service. Using envoy, we have to add the annotations on an
-`EnvoyProxy` CR. Unfortunately the value for the security group is created via OpenTofu,
-but is later needed on the object. In the past i used to write it in a configmap,
-and helm was able to use the CM as value.yaml and annotated the resource.
-This is now no longer possible, therefore the sg is currently hardcoded.
-
-[pr]: https://github.com/nce/oci-free-cloud-k8s/pull/152
-[gatewayapi]: https://gateway-api.sigs.k8s.io/
-[envoy-gateway]: https://gateway.envoyproxy.io/
-
-## Monitoring
-
-# :money_with_wings: Cost
-Overview of my monthly costs:
-![](docs/cost.25.png)
-
-# :books: Docs
-A collection of relevant upstream documentation for reference
-
-## Ingress
-* LB Annotation [for oracle cloud][lb-annotations]
-* Providing OCI-IDs to Helm Releases on [nginx][nginx-helm-lb-annotations]
-
-## Cert Manager
-* [DNS01 Challenge][cert-manager-dns-challenge]
-
-## External Secrets
-* [Advanced Templating for secrets][secrets-templating]
-
-## External Dns
-* [CRDs for DNS records][dns-crds]
-
-## Teleport
-* [teleport-operator][teleport-operator]
-* Teleport [User/Roles RBAC][teleport-rbac]
-* Mapping to teleport role
-* [SSO with GithubConnector][teleport-github-sso] and [External Client Secret][teleport-client-secret]
-* [Helm Chart Deploy Infos][teleport-helm-doc] & [Helm Chart ref][teleport-helm-chart]
-
-## FluxCD
-* [Monitoring setup][flux-monitoring]
-* [Webhook Config][flux-webhook]
-* [Webhook Url Hashing][flux-webhook-hashing]
-* [FluxCD Operator][flux-operator-migration]
-
-[lb-annotations]: https://github.com/oracle/oci-cloud-controller-manager/blob/master/docs/load-balancer-annotations.md
-[nginx-helm-lb-annotations]: https://github.com/kubernetes/ingress-nginx/blob/74ce7b057e8d4ac96d2e11e027930397e5f70010/charts/ingress-nginx/templates/controller-service.yaml#L7
-[cert-manager-dns-challenge]: https://cert-manager.io/docs/configuration/acme/dns01/
-[cert-manager-cloudflare]: https://ryanschiang.com/cloudflare-letsencrypt-http-01
-
-[secrets-templating]: https://external-secrets.io/v0.15.0/guides/templating/#helm
-
-[dns-crds]: https://kubernetes-sigs.github.io/external-dns/latest/docs/sources/crd/#using-crd-source-to-manage-dns-records-in-different-dns-providers
-
-[teleport-client-secret]: https://goteleport.com/docs/admin-guides/infrastructure-as-code/teleport-operator/secret-lookup/#step-23-create-a-custom-resource-referencing-the-secret
-[teleport-github-sso]: https://goteleport.com/docs/admin-guides/access-controls/sso/github-sso/
-[teleport-rbac]: https://goteleport.com/docs/admin-guides/access-controls/getting-started/#step-13-add-local-users-with-preset-roles
-[teleport-helm-chart]: https://goteleport.com/docs/reference/helm-reference/teleport-cluster/
-[teleport-helm-doc]: https://goteleport.com/docs/admin-guides/deploy-a-cluster/helm-deployments/kubernetes-cluster/
-[teleport-operator]: https://goteleport.com/docs/admin-guides/infrastructure-as-code/teleport-operator/
-
-[flux-monitoring]: https://fluxcd.io/flux/monitoring/metrics/#monitoring-setup
-[flux-webhook]: https://fluxcd.io/flux/guides/webhook-receivers/
-[flux-webhook-hashing]: https://github.com/fluxcd/notification-controller/issues/1067
-[flux-operator-migration]: https://fluxcd.control-plane.io/operator/flux-bootstrap-migration/
-
-# Upgrading the Kubernetes Version
-I recommend only upgrading to the version the first command (`available-kubernetes-upgrades`) shows.
-Other upgrades, or jumps to the latest version not being shown, might break the process.
-The [K8s Skew policy][k8s-skew] allows the worker nodes (`kubelets`)
-to be three minor versions behind, so you might be alright, if you incrementally update the controlplane,
-before updating the nodepool.
-
-[k8s-skew]: https://kubernetes.io/releases/version-skew-policy/#kubelet
-
-The commands should be executed inside [terraform/infra/](terraform/infra)
-```
-# get new cluster versions
-❯ oci ce cluster get --cluster-id $(tofu output --raw k8s_cluster_id) | jq -r '.data."available-kubernetes-upgrades"'
-
-# update the cluster version with the information from above
-❯ sed -i '' 's/default = "'$(tofu output --raw kubernetes_version)'"/default = "v1.31.1"/' _variables.tf
-
-# upgrade the controlplane and the nodepool & images
-# this shouldn't roll the nodes and might take around 10mins
-❯ tofu apply
-```
- To roll the nodes, i cordon & drain the k8s node:
-```
-❯ k drain <k8s-node-name> --force --ignore-daemonsets --delete-emptydir-data
-❯ k cordon <k8s-node-name>
-```
-A node deletion in k8s doesn't trigger a change in the `nodepool`. For that, we
-need to terminate the correct instance. But i haven't figured out how to delete the -
-currently cordoned - node, only using `oci`.
-
-So, login to the webui -> Oke Cluster -> Node pool and check for the right
-instance by looking at the private_ip and copy the id.
-
-Now terminate that instance:
-```
-❯ oci compute instance terminate --force --instance-id <oidc.id>
-```
-This triggers a node recreation. Now wait till the node is Ready; And then wait for
-longhorn to sync the volumes.
-```
-# wait until all volumes are healthy again
-❯ k get -w volumes.longhorn.io -A
-```
-Repeat the cordon/drain/terminate for the second node.
-### OKE Upgrade 1.31.1
-For the current update, i've written above upgrade instructions.
-Worked flawlessly, though still with a bit of manual interaction in the webui...
-
-### OKE Upgrade 1.29.1
-I mostly skipped `1.27.2` & `1.28.2` (on the workers) and went for the `1.29` release. As the UI didn't
-prompt for a direct upgrade path of the control-plane, i upgraded the k8s-tf
-version to the prompted next release, ran the upgrade, and continued with the next version.
-
-The worker nodes remained at `1.26.7` during the oke upgrade, which worked because with 1.28
-the new skew policy allows for worker nodes to be three versions behind.
-
-### OKE Upgrade 1.25.4
-
-:warning: remember to remove any `PSP`s first
-
-1. Upgrade the nodepool & cluster version by setting the k8s variable; Run terrafrom (takes ~10min)
-2. Drain/Cordon worker01
-3. Go to the UI; delete the worker01 from the nodepool
-4. Scale the Nodepool back to 2 (takes ~10min)
-5. Wait for longhorn to sync (no volume in state `degraded`)
-6. repeat for second node (2-5)
-
-### OKE Upgrade 1.24
-
-The 1.23.4 -> 1.24.1 Kubernetes Upgrade went pretty smooth, but by hand.
-
-I followed the official guide:
-
-- https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengupgradingk8smasternode.htm
-- https://docs.oracle.com/en-us/iaas/Content/ContEng/Tasks/contengupgradingk8sworkernode.htm
-
-Longhorn synced all volumes after the new node got ready. No downtime experienced.
+- [`docs/MULTI_CLUSTER.md`](docs/MULTI_CLUSTER.md) — architecture, networking,
+  deployment order, validation, and repository extraction guidance
+- [`terraform/README.md`](terraform/README.md) — original Terraform stack details
+- [`DESIGN.md`](DESIGN.md) — original design notes

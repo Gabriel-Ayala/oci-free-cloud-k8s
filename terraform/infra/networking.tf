@@ -6,9 +6,9 @@ module "vcn" {
   internet_gateway_route_rules = null
   local_peering_gateways       = null
   nat_gateway_route_rules      = null
-  vcn_name                     = "k8s-vcn"
-  vcn_dns_label                = "k8svcn"
-  vcn_cidrs                    = ["10.0.0.0/16"]
+  vcn_name                     = "${var.cluster_name}-vcn"
+  vcn_dns_label                = local.vcn_dns_label
+  vcn_cidrs                    = [var.vcn_cidr]
   create_internet_gateway      = true
   create_nat_gateway           = true
   create_service_gateway       = true

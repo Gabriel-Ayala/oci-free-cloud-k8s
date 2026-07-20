@@ -57,6 +57,12 @@ variable "git_url" {
   default = "https://github.com/Gabriel-Ayala/oci-free-cloud-k8s.git"
 }
 
+variable "gitops_path" {
+  description = "Repository path synchronized by Flux"
+  type        = string
+  default     = "gitops/core"
+}
+
 variable "flux_version" {
   description = "Flux version semver range"
   type        = string

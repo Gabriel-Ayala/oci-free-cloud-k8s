@@ -1,0 +1,23 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: contour
+  namespace: flux-system
+spec:
+  interval: 1h
+  path: ./gitops/core/contour/
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  dependsOn:
+    - name: cert-manager-issuer
+  healthChecks:
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: contour-contour
+      namespace: contour
+    - apiVersion: apps/v1
+      kind: Deployment
+      name: contour-envoy
+      namespace: contour

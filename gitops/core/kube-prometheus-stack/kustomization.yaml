@@ -6,7 +6,6 @@ resources:
   - helm.yaml
   - secret.yaml
   - httproute.yaml
-  - securitypolicy.yaml
 commonLabels:
   app.kubernetes.io/component: monitoring
 configMapGenerator:

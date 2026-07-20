@@ -4,7 +4,7 @@ metadata:
   name: lychee
 spec:
   parentRefs:
-    - name: contour-gateway
+    - name: contour
       namespace: contour
   hostnames:
     - "img.nce.wtf"

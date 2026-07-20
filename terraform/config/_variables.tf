@@ -3,6 +3,18 @@ variable "compartment_id" {
   description = "The compartment to create the resources in"
 }
 
+variable "cluster_name" {
+  description = "Name of the OKE cluster being configured"
+  type        = string
+  default     = "k8s-cluster"
+}
+
+variable "kubeconfig_path" {
+  description = "Path to the kubeconfig for this cluster"
+  type        = string
+  default     = "../.kube.config"
+}
+
 variable "region" {
   description = "OCI region"
   type        = string
@@ -23,9 +35,32 @@ variable "node_pool_id" {
 }
 
 variable "vault_id" {
-  description = "OCI Vault OIDC"
+  description = "OCID of the OCI Vault used by External Secrets"
   type        = string
   default     = ""
+}
+
+variable "create_external_secrets_vault" {
+  description = "Create a software-protected OCI Vault when vault_id is empty"
+  type        = bool
+  default     = false
+}
+
+variable "cluster_id" {
+  description = "OCID of the OKE cluster, used by the workload identity policy"
+  type        = string
+  default     = ""
+}
+
+variable "external_secrets_principal_type" {
+  description = "OCI authentication principal used by External Secrets"
+  type        = string
+  default     = "Workload"
+
+  validation {
+    condition     = contains(["Workload", "InstancePrincipal"], var.external_secrets_principal_type)
+    error_message = "external_secrets_principal_type must be Workload or InstancePrincipal."
+  }
 }
 
 variable "tenancy_id" {
@@ -63,6 +98,12 @@ variable "git_url" {
   description = "Git repository Flux should synchronize"
   type        = string
   default     = "https://github.com/Gabriel-Ayala/oci-free-cloud-k8s.git"
+}
+
+variable "gitops_path" {
+  description = "Repository path synchronized by Flux for this cluster"
+  type        = string
+  default     = "gitops/core"
 }
 
 variable "gh_org" {

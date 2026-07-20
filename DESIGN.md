@@ -1,7 +1,7 @@
 # OCI - Kubernetes Design ConsiderationsWIP
 
 ## K8s Cluster Layout
-## Ingress - Nginx-Ingress
+## Ingress - Contour
 ## CD - Flux
 ## Secretmanagement - Vault
 ## X509 - Certmanager

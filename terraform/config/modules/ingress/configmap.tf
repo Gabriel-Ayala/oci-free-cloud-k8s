@@ -1,6 +1,6 @@
 locals {
   namespaces = [
-    "envoy-gateway",
+    "contour",
     "teleport"
   ]
 }
@@ -35,7 +35,9 @@ metadata:
   namespace: ${each.value}
 data:
   values.yaml: |
-    oci:
-      lbsecuritygroup: ${oci_core_network_security_group.ingress_lb.id}
+    envoy:
+      service:
+        annotations:
+          oci.oraclecloud.com/oci-network-security-groups: ${oci_core_network_security_group.ingress_lb.id}
 YAML
 }

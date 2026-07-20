@@ -3,8 +3,12 @@ module "externalsecrets" {
   count  = var.enable_external_secrets ? 1 : 0
 
   compartment_id = var.compartment_id
-  tenancy_id     = var.tenancy_id
+  cluster_id     = var.cluster_id
+  cluster_name   = var.cluster_name
+  create_vault   = var.create_external_secrets_vault
+  principal_type = var.external_secrets_principal_type
   vault_id       = var.vault_id
+  region         = var.region
 
   depends_on = [
     module.fluxcd
@@ -19,6 +23,7 @@ module "fluxcd" {
   github_app_id              = var.github_app_id
   github_app_installation_id = var.github_app_installation_id
   github_app_pem             = var.github_app_pem
+  gitops_path                = var.gitops_path
   git_url                    = var.git_url
   gh_org                     = var.gh_org
   gh_repository              = var.gh_repository
@@ -31,6 +36,7 @@ module "ingress" {
   count  = var.enable_ingress ? 1 : 0
 
   compartment_id = var.compartment_id
+  vcn_name       = "${var.cluster_name}-vcn"
 }
 
 module "grafana" {

@@ -4,8 +4,8 @@ metadata:
   name: grafana
 spec:
   parentRefs:
-    - name: envoy
-      namespace: envoy-gateway
+    - name: contour
+      namespace: contour
   hostnames:
     - "monitoring.nce.wtf"
   rules:

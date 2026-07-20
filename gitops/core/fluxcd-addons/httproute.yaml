@@ -4,8 +4,8 @@ metadata:
   name: flux-webhook
 spec:
   parentRefs:
-    - name: envoy
-      namespace: envoy-gateway
+    - name: contour
+      namespace: contour
   hostnames:
     - "flux-webhook.nce.wtf"
   rules:

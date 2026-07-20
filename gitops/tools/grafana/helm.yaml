@@ -1,0 +1,43 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: grafana
+  namespace: grafana
+spec:
+  interval: 5m
+  url: https://grafana.github.io/helm-charts
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: grafana
+  namespace: grafana
+spec:
+  interval: 10m
+  timeout: 5m
+  targetNamespace: grafana
+  chart:
+    spec:
+      chart: grafana
+      version: "10.5.15"
+      sourceRef:
+        kind: HelmRepository
+        name: grafana
+        namespace: grafana
+      interval: 5m
+  releaseName: grafana
+  values:
+    admin:
+      existingSecret: grafana-admin-credentials
+      userKey: admin-user
+      passwordKey: admin-password
+    service:
+      type: ClusterIP
+    persistence:
+      enabled: false
+    grafana.ini:
+      app_mode: production
+      users:
+        allow_sign_up: false
+    plugins:
+      - oci-metrics-datasource

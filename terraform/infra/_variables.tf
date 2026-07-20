@@ -3,6 +3,59 @@ variable "compartment_id" {
   description = "The compartment to create the resources in"
 }
 
+variable "cluster_name" {
+  description = "Unique OKE cluster name within the compartment"
+  type        = string
+  default     = "k8s-cluster"
+
+  validation {
+    condition     = can(regex("^[a-z][a-z0-9-]{0,62}[a-z0-9]$", var.cluster_name))
+    error_message = "cluster_name must start with a letter, end with a letter or number, and contain only lowercase letters, numbers, and hyphens."
+  }
+}
+
+variable "kubeconfig_path" {
+  description = "Path where the generated kubeconfig is written"
+  type        = string
+  default     = "../.kube.config"
+}
+
+variable "vcn_cidr" {
+  description = "CIDR range reserved for this cluster VCN"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "public_subnet_cidr" {
+  description = "CIDR range for the cluster public subnet"
+  type        = string
+  default     = "10.0.0.0/24"
+}
+
+variable "private_subnet_cidr" {
+  description = "CIDR range for the cluster private subnet"
+  type        = string
+  default     = "10.0.1.0/24"
+}
+
+variable "pods_cidr" {
+  description = "Kubernetes pod CIDR"
+  type        = string
+  default     = "10.244.0.0/16"
+}
+
+variable "services_cidr" {
+  description = "Kubernetes service CIDR"
+  type        = string
+  default     = "10.96.0.0/16"
+}
+
+variable "worker_availability_domains" {
+  description = "Availability domains for workers; empty selects all"
+  type        = list(string)
+  default     = []
+}
+
 variable "region" {
   description = "OCI region"
   type        = string

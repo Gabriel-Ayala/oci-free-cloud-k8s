@@ -4,8 +4,8 @@ metadata:
   name: longhorn
 spec:
   parentRefs:
-    - name: envoy
-      namespace: envoy-gateway
+    - name: contour
+      namespace: contour
   hostnames:
     - "storage.nce.wtf"
   rules:

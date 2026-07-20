@@ -1,7 +1,7 @@
 resource "oci_containerengine_cluster" "k8s_cluster" {
   compartment_id     = var.compartment_id
   kubernetes_version = var.kubernetes_version
-  name               = "k8s-cluster"
+  name               = var.cluster_name
   vcn_id             = module.vcn.vcn_id
   endpoint_config {
     is_public_ip_enabled = true
@@ -13,8 +13,8 @@ resource "oci_containerengine_cluster" "k8s_cluster" {
       is_tiller_enabled               = false
     }
     kubernetes_network_config {
-      pods_cidr     = "10.244.0.0/16"
-      services_cidr = "10.96.0.0/16"
+      pods_cidr     = var.pods_cidr
+      services_cidr = var.services_cidr
     }
     service_lb_subnet_ids = [oci_core_subnet.vcn_public_subnet.id]
   }
@@ -28,7 +28,7 @@ data "oci_containerengine_cluster_kube_config" "k8s_cluster_kube_config" {
 resource "local_file" "kube_config" {
   depends_on      = [oci_containerengine_node_pool.k8s_node_pool]
   content         = data.oci_containerengine_cluster_kube_config.k8s_cluster_kube_config.content
-  filename        = "../.kube.config"
+  filename        = var.kubeconfig_path
   file_permission = 0400
 }
 
@@ -50,7 +50,7 @@ resource "oci_containerengine_node_pool" "k8s_node_pool" {
   cluster_id         = oci_containerengine_cluster.k8s_cluster.id
   compartment_id     = var.compartment_id
   kubernetes_version = var.kubernetes_version
-  name               = "k8s-node-pool"
+  name               = "${var.cluster_name}-node-pool"
 
   node_metadata = {
     user_data = base64encode(file("files/node-pool-init.sh"))
@@ -58,11 +58,11 @@ resource "oci_containerengine_node_pool" "k8s_node_pool" {
 
   node_config_details {
     dynamic "placement_configs" {
-      for_each = data.oci_identity_availability_domains.ads.availability_domains
+      for_each = local.worker_availability_domains
 
       content {
         availability_domain = placement_configs.value.name
-        subnet_id            = oci_core_subnet.vcn_private_subnet.id
+        subnet_id           = oci_core_subnet.vcn_private_subnet.id
       }
     }
 
@@ -87,7 +87,7 @@ resource "oci_containerengine_node_pool" "k8s_node_pool" {
   }
   initial_node_labels {
     key   = "name"
-    value = "k8s-cluster"
+    value = var.cluster_name
   }
   ssh_public_key = var.ssh_public_key
 }

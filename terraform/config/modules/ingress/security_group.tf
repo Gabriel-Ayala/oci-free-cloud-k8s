@@ -1,7 +1,7 @@
 data "oci_core_vcns" "k8s_vcn" {
   compartment_id = var.compartment_id
 
-  display_name = "k8s-vcn"
+  display_name = var.vcn_name
 }
 
 resource "oci_core_network_security_group" "ingress_lb" {

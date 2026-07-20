@@ -63,7 +63,7 @@ instance:
   sync:
     kind: GitRepository
     url: ${var.git_url}
-    path: gitops/core
+    path: ${var.gitops_path}
     ref: "refs/heads/main"
 ${local.flux_sync_auth}
 YAML

@@ -1,43 +1,46 @@
-resource "oci_identity_group" "vault_admin" {
+resource "oci_kms_vault" "external_secrets" {
+  count = var.create_vault ? 1 : 0
+
   compartment_id = var.compartment_id
-  description    = "VaultAdmins"
-  name           = "VaultAdmins"
+  display_name   = "oke-${var.cluster_name}-secrets"
+  vault_type     = "DEFAULT"
 }
 
-resource "oci_identity_user" "external_secrets" {
+resource "oci_kms_key" "external_secrets" {
+  count = var.create_vault ? 1 : 0
+
+  compartment_id   = var.compartment_id
+  display_name     = "oke-${var.cluster_name}-secrets-key"
+  management_endpoint = oci_kms_vault.external_secrets[0].management_endpoint
+  protection_mode  = "SOFTWARE"
+
+  key_shape {
+    algorithm = "AES"
+    length    = 32
+  }
+}
+
+locals {
+  vault_id = var.create_vault ? oci_kms_vault.external_secrets[0].id : var.vault_id
+}
+
+resource "oci_identity_dynamic_group" "external_secrets" {
+  count = var.principal_type == "InstancePrincipal" ? 1 : 0
+
   compartment_id = var.compartment_id
-  description    = "ExternalSecrets"
-  name           = "ExternalSecrets"
-  email          = "770135+nce@users.noreply.github.com"
-}
-
-resource "tls_private_key" "external_secrets" {
-  algorithm = "RSA"
-  rsa_bits  = 4096
-}
-
-resource "oci_identity_api_key" "external_secrets" {
-  key_value = tls_private_key.external_secrets.public_key_pem
-  user_id   = oci_identity_user.external_secrets.id
-}
-
-resource "oci_identity_user_group_membership" "user_group_membership" {
-  group_id = oci_identity_group.vault_admin.id
-  user_id  = oci_identity_user.external_secrets.id
-}
-
-resource "oci_identity_user_capabilities_management" "user_capabilities_management" {
-  user_id = oci_identity_user.external_secrets.id
-
-  can_use_api_keys = "true"
+  description    = "Tools OKE worker instances used by External Secrets"
+  name           = "ExternalSecrets-${var.cluster_name}"
+  matching_rule  = "instance.compartment.id = '${var.compartment_id}'"
 }
 
 resource "oci_identity_policy" "external_secrets" {
   compartment_id = var.compartment_id
-  description    = "allow vault management"
-  name           = "VaultAdmins"
-  statements = [
-    "Allow group 'Default'/'VaultAdmins' to manage secret-family in tenancy",
-    "Allow group 'Default'/'VaultAdmins' to manage vault in tenancy"
+  description    = "Allow External Secrets to read this cluster's OCI Vault"
+  name           = "ExternalSecrets-${var.cluster_name}"
+
+  statements = var.principal_type == "Workload" ? [
+    "Allow any-user to read secret-family in tenancy where all {request.principal.type = 'workload', request.principal.namespace = 'external-secrets', request.principal.service_account = 'external-secrets', request.principal.cluster_id = '${var.cluster_id}', target.vault.id = '${local.vault_id}'}"
+    ] : [
+    "Allow dynamic-group ExternalSecrets-${var.cluster_name} to read secret-family in tenancy where target.vault.id = '${local.vault_id}'"
   ]
 }

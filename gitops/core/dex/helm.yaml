@@ -62,12 +62,6 @@ spec:
       #
       # If this option isn't chosen clients may be added through the gRPC API.
       staticClients:
-        - name: Envoy
-          IDEnv: envoy.client-id
-          secretEnv: envoy.client-secret
-          redirectURIs:
-            - https://storage.nce.wtf/oauth2/callback
-            - https://prometheus.nce.wtf/oauth2/callback
         - name: S3Proxy
           IDEnv: s3proxy.client-id
           secretEnv: s3proxy.client-secret

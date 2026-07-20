@@ -38,8 +38,8 @@ spec:
     grafana.ini:
       app_mode: production
       server:
-        domain: grafana.inova.hackyard.dev
-        root_url: https://grafana.inova.hackyard.dev
+        domain: grafana-inova.hackyard.dev
+        root_url: https://grafana-inova.hackyard.dev
       users:
         allow_sign_up: false
     plugins:

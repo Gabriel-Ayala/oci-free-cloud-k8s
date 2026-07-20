@@ -9,15 +9,3 @@ spec:
     name: letsencrypt
     kind: ClusterIssuer
   secretName: wildcard-hackyard-dev-tls-cert
----
-apiVersion: cert-manager.io/v1
-kind: Certificate
-metadata:
-  name: wildcard-inova-hackyard-dev
-spec:
-  dnsNames:
-    - "*.inova.hackyard.dev"
-  issuerRef:
-    name: letsencrypt
-    kind: ClusterIssuer
-  secretName: wildcard-inova-hackyard-dev-tls-cert

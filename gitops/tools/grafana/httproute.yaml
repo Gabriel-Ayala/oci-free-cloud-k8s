@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "grafana.inova.hackyard.dev"
+    - "grafana-inova.hackyard.dev"
   rules:
     - matches:
         - path:

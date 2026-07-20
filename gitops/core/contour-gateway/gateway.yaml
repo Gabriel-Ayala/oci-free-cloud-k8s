@@ -31,22 +31,3 @@ spec:
         certificateRefs:
           - kind: Secret
             name: wildcard-hackyard-dev-tls-cert
-    - name: http-inova
-      hostname: "*.inova.hackyard.dev"
-      protocol: HTTP
-      port: 80
-      allowedRoutes:
-        namespaces:
-          from: All
-    - name: https-inova
-      hostname: "*.inova.hackyard.dev"
-      protocol: HTTPS
-      port: 443
-      allowedRoutes:
-        namespaces:
-          from: All
-      tls:
-        mode: Terminate
-        certificateRefs:
-          - kind: Secret
-            name: wildcard-inova-hackyard-dev-tls-cert

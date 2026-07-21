@@ -1,0 +1,8 @@
+apiVersion: longhorn.io/v1beta2
+kind: BackupTarget
+metadata:
+  name: default
+spec:
+  backupTargetURL: s3://${LONGHORN_BACKUP_BUCKET:=oke-longhorn-backups}@${LONGHORN_BACKUP_REGION:=sa-saopaulo-1}/${LONGHORN_BACKUP_PREFIX:=unassigned}/
+  credentialSecret: longhorn-backup-credentials
+  pollInterval: 5m0s

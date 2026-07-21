@@ -45,3 +45,18 @@ module "grafana" {
 
   compartment_id = var.compartment_id
 }
+
+module "longhorn_backup" {
+  source = "./modules/longhorn-backup"
+  count  = var.enable_longhorn_backup ? 1 : 0
+
+  compartment_id = var.compartment_id
+  tenancy_id     = var.tenancy_id
+  region         = var.region
+  vault_id       = module.externalsecrets[0].vault_id
+  vault_key_id   = module.externalsecrets[0].key_id
+  bucket_name    = var.longhorn_backup_bucket_name
+  user_email     = var.longhorn_backup_user_email
+
+  depends_on = [module.externalsecrets]
+}

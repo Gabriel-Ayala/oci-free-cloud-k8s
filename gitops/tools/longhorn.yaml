@@ -17,3 +17,6 @@ spec:
       kind: Deployment
       name: longhorn-ui
       namespace: longhorn
+  postBuild:
+    substitute:
+      LONGHORN_BACKUP_PREFIX: tools

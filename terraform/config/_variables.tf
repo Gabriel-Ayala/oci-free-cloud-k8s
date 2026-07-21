@@ -147,3 +147,26 @@ variable "enable_grafana_iam" {
   type        = bool
   default     = false
 }
+
+variable "enable_longhorn_backup" {
+  description = "Create the OCI Object Storage backup target and Vault credentials for Longhorn"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.enable_longhorn_backup || var.enable_external_secrets
+    error_message = "enable_longhorn_backup requires enable_external_secrets so its credentials can be stored in OCI Vault."
+  }
+}
+
+variable "longhorn_backup_bucket_name" {
+  description = "Private OCI Object Storage bucket used by Longhorn backups"
+  type        = string
+  default     = "oke-longhorn-backups"
+}
+
+variable "longhorn_backup_user_email" {
+  description = "Primary email required for the dedicated OCI IAM user used by Longhorn backups"
+  type        = string
+  default     = ""
+}

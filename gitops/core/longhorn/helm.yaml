@@ -25,6 +25,8 @@ spec:
   values:
     defaultSettings:
       storageMinimalAvailablePercentage: 10
+      backupTarget: s3://${LONGHORN_BACKUP_BUCKET:=oke-longhorn-backups}@${LONGHORN_BACKUP_REGION:=sa-saopaulo-1}/${LONGHORN_BACKUP_PREFIX:=unassigned}/
+      backupTargetCredentialSecret: longhorn-backup-credentials
     persistence:
       defaultClassReplicaCount: 2
     ingress:

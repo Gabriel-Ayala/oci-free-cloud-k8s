@@ -283,6 +283,47 @@ the test. Do not use the boot-disk-backed default for production workloads
 until capacity, replication, backup, and failure-recovery procedures are
 reviewed.
 
+### Longhorn backup plan with OCI services
+
+The tools Terraform stack creates a private, versioned OCI Object Storage
+bucket named `oke-longhorn-backups`, a dedicated IAM user/customer secret key,
+and a bucket-scoped policy. The S3-compatible access key, secret key, and OCI
+Object Storage endpoint are stored in the shared OCI Vault and synchronized to
+each cluster by External Secrets. Longhorn uses a separate prefix per cluster:
+
+```text
+s3://oke-longhorn-backups@sa-saopaulo-1/tools/
+s3://oke-longhorn-backups@sa-saopaulo-1/staging/
+s3://oke-longhorn-backups@sa-saopaulo-1/production/
+```
+
+Each cluster receives a default-group recurring backup at 02:00 UTC, retains
+seven backups per volume, and performs a full backup after seven incremental
+backups. Object Storage versioning is enabled; automatic deletion is not
+configured, so review storage growth before adding a lifecycle policy.
+Terraform state contains the generated customer secret key and must remain
+protected or be moved to encrypted remote state.
+
+Set `OCI_LONGHORN_BACKUP_USER_EMAIL` in the uncommitted `.env` before applying
+the tools config. The tools stack must be applied first because it owns the
+bucket, IAM credentials, and Vault secrets; staging and production only read
+those Vault secrets through their existing External Secrets policies.
+
+Verify the backup integration in each cluster:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl -n longhorn get externalsecret longhorn-backup-credentials
+kubectl -n longhorn get secret longhorn-backup-credentials
+kubectl -n longhorn get recurringjob daily-object-storage-backup
+kubectl -n longhorn get settings.longhorn.io backup-target
+```
+
+Before production use, create a test PVC, run a manual backup, restore it as a
+new volume, and verify application data. Object Storage backups protect
+Longhorn volume data; they do not replace application-consistent database
+dumps or an OCI Block Volume backup strategy for unrelated compute disks.
+
 ## External Secrets and OCI Vault
 
 All clusters expose a `ClusterSecretStore` named `oracle-vault`.

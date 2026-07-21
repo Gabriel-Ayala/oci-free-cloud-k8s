@@ -99,6 +99,15 @@ important data. Each cluster exposes the UI through its own route:
 `storage-production.hackyard.dev`. This administrative surface must be
 protected before general use.
 
+Longhorn backups use OCI Object Storage through its S3-compatible API. The
+tools Terraform stack owns a private versioned bucket, a dedicated IAM user
+and customer secret key, and the bucket policy. Credentials and the endpoint
+are stored in the shared OCI Vault and exposed to all clusters through
+External Secrets. Each cluster uses a separate bucket prefix and a daily
+default-group backup with seven retained backups and a periodic full backup.
+Object Storage lifecycle deletion is intentionally not enabled until storage
+growth and recovery requirements are reviewed.
+
 The deployed tools baseline includes standalone Grafana with the OCI Metrics
 datasource plugin, local basic authentication, no persistent volume, and a
 Contour route. The full Prometheus/Alertmanager stack is present only in the

@@ -353,6 +353,27 @@ retained a marker after Pod recreation. The default disk is the worker boot
 volume, so dedicated OCI Block Volumes, capacity planning, backups, and
 recovery testing are required before production data is entrusted to Longhorn.
 
+#### OCI Object Storage backup plan
+
+The tools config owns a private versioned `oke-longhorn-backups` bucket, a
+dedicated IAM user/customer secret key, a bucket-scoped policy, and three Vault
+secrets containing the S3 credentials and OCI endpoint. External Secrets
+consumes the shared credentials in all clusters, while Longhorn uses a
+separate prefix per cluster:
+
+```text
+tools      -> s3://oke-longhorn-backups@sa-saopaulo-1/tools/
+staging    -> s3://oke-longhorn-backups@sa-saopaulo-1/staging/
+production -> s3://oke-longhorn-backups@sa-saopaulo-1/production/
+```
+
+The recurring backup job runs daily at 02:00 UTC, retains seven backups per
+volume, and performs a full backup after seven incremental backups. Object
+Storage lifecycle deletion is not enabled by default. Set
+`OCI_LONGHORN_BACKUP_USER_EMAIL` in the uncommitted `.env`, apply the tools
+config first, then allow Flux to reconcile staging and production. Terraform
+state contains the customer secret key, so protect it as sensitive state.
+
 ### ExternalDNS in staging and production
 
 Staging and production each run a separate ExternalDNS deployment in the

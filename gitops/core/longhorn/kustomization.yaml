@@ -5,4 +5,5 @@ resources:
   - namespace.yaml
   - helm.yaml
   - backup-secret.yaml
+  - backup-settings.yaml
   - recurring-backup.yaml

@@ -1,0 +1,11 @@
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: backup-target
+value: s3://${LONGHORN_BACKUP_BUCKET:=oke-longhorn-backups}@${LONGHORN_BACKUP_REGION:=sa-saopaulo-1}/${LONGHORN_BACKUP_PREFIX:=unassigned}/
+---
+apiVersion: longhorn.io/v1beta2
+kind: Setting
+metadata:
+  name: backup-target-credential-secret
+value: longhorn-backup-credentials

@@ -130,7 +130,8 @@ allowed groups should receive HTTP 403.
 Tools Grafana uses the same Keycloak realm through its generic OAuth
 integration. `platform-admins` receive the Grafana Administrator role; other
 authenticated users receive Viewer access. Its Keycloak callback is
-`https://grafana-inova.hackyard.dev/login/generic_oauth`.
+`https://grafana-inova.hackyard.dev/login/generic_oauth`. The first successful
+Keycloak login provisions the Grafana account automatically.
 
 ## Secrets and troubleshooting
 

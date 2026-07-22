@@ -1,0 +1,21 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "graphTooltip": 1,
+  "panels": [
+    {"type":"stat","title":"Clusters reporting","gridPos":{"h":4,"w":6,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"count(count by (cluster) (up))","refId":"A"}]},
+    {"type":"stat","title":"Nodes up","gridPos":{"h":4,"w":6,"x":6,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(kube_node_status_condition{condition=\"Ready\",status=\"true\"})","refId":"A"}]},
+    {"type":"stat","title":"Pods not running","gridPos":{"h":4,"w":6,"x":12,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(kube_pod_status_phase{phase=~\"Pending|Failed|Unknown\"})","refId":"A"}]},
+    {"type":"stat","title":"Remote-write samples/sec","gridPos":{"h":4,"w":6,"x":18,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(prometheus_remote_storage_samples_total[5m]))","refId":"A"}]},
+    {"type":"timeseries","title":"CPU usage by cluster","gridPos":{"h":8,"w":12,"x":0,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(node_cpu_seconds_total{mode!=\"idle\"}[5m])) by (cluster)","legendFormat":"{{cluster}}","refId":"A"}]},
+    {"type":"timeseries","title":"Memory usage by cluster","gridPos":{"h":8,"w":12,"x":12,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(node_memory_MemTotal_bytes - node_memory_MemAvailable_bytes) by (cluster)","legendFormat":"{{cluster}}","refId":"A"}]}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["kubernetes","fleet"],
+  "templating":{"list":[]},
+  "time":{"from":"now-6h","to":"now"},
+  "title":"Kubernetes Fleet Overview",
+  "uid":"k8s-fleet-overview",
+  "version":1
+}

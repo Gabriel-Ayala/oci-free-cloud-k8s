@@ -1,0 +1,21 @@
+{
+  "annotations":{"list":[]},
+  "editable":true,
+  "graphTooltip":1,
+  "panels":[
+    {"type":"stat","title":"Flux resources not ready","gridPos":{"h":4,"w":8,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(gotk_resource_info{cluster=\"$cluster\",ready=\"False\"})","refId":"A"}]},
+    {"type":"stat","title":"Longhorn degraded volumes","gridPos":{"h":4,"w":8,"x":8,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(longhorn_volume_robustness{cluster=\"$cluster\",robustness!=\"healthy\"})","refId":"A"}]},
+    {"type":"stat","title":"Certificate renewals pending","gridPos":{"h":4,"w":8,"x":16,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(certmanager_certificate_expiration_timestamp_seconds{cluster=\"$cluster\"} - time() < 604800)","refId":"A"}]},
+    {"type":"timeseries","title":"Flux reconciliation rate","gridPos":{"h":8,"w":12,"x":0,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(gotk_reconcile_duration_seconds_count{cluster=\"$cluster\"}[5m])) by (kind)","legendFormat":"{{kind}}","refId":"A"}]},
+    {"type":"timeseries","title":"Longhorn volume state","gridPos":{"h":8,"w":12,"x":12,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(longhorn_volume_robustness{cluster=\"$cluster\"}) by (robustness)","legendFormat":"{{robustness}}","refId":"A"}]},
+    {"type":"timeseries","title":"Mimir ingestion errors","gridPos":{"h":8,"w":24,"x":0,"y":12},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(prometheus_remote_storage_failed_samples_total{cluster=\"$cluster\"}[5m]))","legendFormat":"failed samples/sec","refId":"A"}]}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["flux","longhorn","platform"],
+  "templating":{"list":[{"name":"cluster","label":"Cluster","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(up, cluster)","includeAll":false,"multi":false,"refresh":1,"current":{}}]},
+  "time":{"from":"now-6h","to":"now"},
+  "title":"Platform Operations",
+  "uid":"platform-operations",
+  "version":1
+}

@@ -43,3 +43,15 @@ variable "peer_vcn_cidrs" {
   description = "CIDRs of other cluster VCNs reachable through the DRG"
   default     = []
 }
+
+variable "reserve_mimir_private_ip" {
+  description = "Reserve a stable private IP for the tools Mimir load balancer"
+  type        = bool
+  default     = false
+}
+
+variable "mimir_private_ip_address" {
+  description = "Optional fixed private IP for the tools Mimir load balancer"
+  type        = string
+  default     = ""
+}

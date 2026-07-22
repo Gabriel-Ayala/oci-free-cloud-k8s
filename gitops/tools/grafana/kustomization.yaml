@@ -6,3 +6,15 @@ resources:
   - secret.yaml
   - helm.yaml
   - httproute.yaml
+configMapGenerator:
+  - name: observability-dashboards
+    files:
+      - dashboards/fleet-overview.json
+      - dashboards/cluster-resources.json
+      - dashboards/platform-operations.json
+      - dashboards/mimir-prometheus.json
+    options:
+      labels:
+        grafana_dashboard: "1"
+        app.kubernetes.io/part-of: observability
+        kustomize.toolkit.fluxcd.io/substitute: disabled

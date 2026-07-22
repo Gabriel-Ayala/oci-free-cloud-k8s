@@ -1,0 +1,21 @@
+{
+  "annotations":{"list":[]},
+  "editable":true,
+  "graphTooltip":1,
+  "panels":[
+    {"type":"stat","title":"Samples ingested/sec","gridPos":{"h":4,"w":8,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(prometheus_remote_storage_samples_total[5m]))","refId":"A"}]},
+    {"type":"stat","title":"Failed samples/sec","gridPos":{"h":4,"w":8,"x":8,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(prometheus_remote_storage_failed_samples_total[5m]))","refId":"A"}]},
+    {"type":"stat","title":"Active scrape targets","gridPos":{"h":4,"w":8,"x":16,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"count(up)","refId":"A"}]},
+    {"type":"timeseries","title":"Samples by cluster","gridPos":{"h":8,"w":12,"x":0,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(prometheus_remote_storage_samples_total[5m])) by (cluster)","legendFormat":"{{cluster}}","refId":"A"}]},
+    {"type":"timeseries","title":"Mimir request rate","gridPos":{"h":8,"w":12,"x":12,"y":4},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(cortex_request_duration_seconds_count{job=~\"mimir.*\"}[5m])) by (route)","legendFormat":"{{route}}","refId":"A"}]},
+    {"type":"timeseries","title":"Target availability by cluster","gridPos":{"h":8,"w":24,"x":0,"y":12},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"avg(up) by (cluster)","legendFormat":"{{cluster}}","refId":"A"}]}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["mimir","prometheus"],
+  "templating":{"list":[]},
+  "time":{"from":"now-6h","to":"now"},
+  "title":"Mimir and Prometheus Health",
+  "uid":"mimir-prometheus-health",
+  "version":1
+}

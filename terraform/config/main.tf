@@ -71,3 +71,34 @@ module "longhorn_backup" {
 
   depends_on = [module.externalsecrets]
 }
+
+module "mimir_storage" {
+  source = "./modules/mimir-storage"
+  count  = var.enable_mimir_storage ? 1 : 0
+
+  compartment_id = var.compartment_id
+  tenancy_id     = var.tenancy_id
+  region         = var.region
+  vault_id       = module.externalsecrets[0].vault_id
+  vault_key_id   = module.externalsecrets[0].key_id
+  bucket_name    = var.mimir_storage_bucket_name
+  user_email     = var.mimir_storage_user_email
+
+  depends_on = [module.externalsecrets]
+}
+
+resource "kubectl_manifest" "mimir_oci_config" {
+  count = var.enable_mimir_storage ? 1 : 0
+
+  yaml_body = <<YAML
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: observability-config
+  namespace: flux-system
+data:
+  MIMIR_PRIVATE_SUBNET_ID: "${var.private_subnet_id}"
+  MIMIR_PRIVATE_IP_ID: "${var.mimir_private_ip_id}"
+  MIMIR_PRIVATE_IP_ADDRESS: "${var.mimir_private_ip_address}"
+YAML
+}

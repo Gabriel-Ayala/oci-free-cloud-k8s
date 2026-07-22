@@ -170,6 +170,47 @@ variable "enable_longhorn_backup" {
   }
 }
 
+variable "enable_mimir_storage" {
+  description = "Create the dedicated OCI Object Storage bucket and Vault credentials for Mimir"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.enable_mimir_storage || var.enable_external_secrets
+    error_message = "enable_mimir_storage requires enable_external_secrets so its credentials can be stored in OCI Vault."
+  }
+}
+
+variable "mimir_storage_bucket_name" {
+  description = "Private OCI Object Storage bucket used by Mimir"
+  type        = string
+  default     = "oke-mimir-metrics"
+}
+
+variable "mimir_storage_user_email" {
+  description = "Primary email required for the dedicated OCI IAM user used by Mimir"
+  type        = string
+  default     = ""
+}
+
+variable "private_subnet_id" {
+  description = "Private subnet OCID used by the internal Mimir load balancer"
+  type        = string
+  default     = ""
+}
+
+variable "mimir_private_ip_id" {
+  description = "Reserved private IP OCID assigned to the internal Mimir load balancer"
+  type        = string
+  default     = ""
+}
+
+variable "mimir_private_ip_address" {
+  description = "Reserved private IP address assigned to the internal Mimir load balancer"
+  type        = string
+  default     = ""
+}
+
 variable "longhorn_backup_bucket_name" {
   description = "Private OCI Object Storage bucket used by Longhorn backups"
   type        = string

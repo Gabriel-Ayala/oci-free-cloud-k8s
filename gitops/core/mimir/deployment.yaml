@@ -22,6 +22,7 @@ spec:
           image: grafana/mimir:3.1.2
           args:
             - -config.file=/etc/mimir/mimir.yaml
+            - -config.expand-env=true
           ports:
             - name: http
               containerPort: 8080
@@ -46,6 +47,9 @@ spec:
             limits:
               cpu: 1000m
               memory: 1Gi
+          envFrom:
+            - secretRef:
+                name: mimir-object-storage
           volumeMounts:
             - name: config
               mountPath: /etc/mimir
@@ -57,5 +61,4 @@ spec:
           configMap:
             name: mimir-config
         - name: data
-          persistentVolumeClaim:
-            claimName: mimir-data
+          emptyDir: {}

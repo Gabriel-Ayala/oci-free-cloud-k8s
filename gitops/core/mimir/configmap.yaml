@@ -15,10 +15,21 @@ data:
     usage_stats:
       enabled: false
 
+    common:
+      storage:
+        backend: s3
+        s3:
+          endpoint: ${MIMIR_S3_ENDPOINT}
+          region: sa-saopaulo-1
+          access_key_id: ${MIMIR_S3_ACCESS_KEY}
+          secret_access_key: ${MIMIR_S3_SECRET_KEY}
+          signature_version: v4
+          bucket_lookup_type: path
+
     blocks_storage:
-      backend: filesystem
-      filesystem:
-        dir: /data/blocks
+      s3:
+        bucket_name: ${MIMIR_S3_BUCKET}
+      storage_prefix: blocks
       tsdb:
         dir: /data/tsdb
         retention_period: 24h
@@ -49,16 +60,16 @@ data:
           store: memberlist
 
     ruler_storage:
-      backend: filesystem
-      filesystem:
-        dir: /data/rules
+      s3:
+        bucket_name: ${MIMIR_S3_BUCKET}
+      storage_prefix: ruler
 
     alertmanager_storage:
-      backend: filesystem
-      filesystem:
-        dir: /data/alertmanager
+      s3:
+        bucket_name: ${MIMIR_S3_BUCKET}
+      storage_prefix: alertmanager
 
     limits:
       ingestion_rate: 100000
       ingestion_burst_size: 200000
-      compactor_blocks_retention_period: 7d
+      compactor_blocks_retention_period: 30d

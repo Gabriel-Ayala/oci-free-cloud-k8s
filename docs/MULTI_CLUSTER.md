@@ -566,10 +566,11 @@ done
 
 - Local state is suitable for a personal deployment but not ideal for team
   operations. Move each stack to a locked remote backend before collaboration.
-- The `tools` minimal profile installs Flux, metrics-server, External Secrets,
-  Contour, Grafana, kube-prometheus-stack, and single-process Mimir. Mimir is
-  intentionally single-node with filesystem storage; HA and OCI Object Storage
-  are follow-up work before production-scale metrics retention. See
+- The `tools` profile installs Flux, metrics-server, External Secrets, Contour,
+  Grafana, kube-prometheus-stack, and single-process Mimir. Staging and
+  production run collectors that remote-write to Mimir through the private
+  tools NLB. Mimir uses OCI Object Storage with 30-day retention; the current
+  single replica is a resource-conscious starting point. See
   `docs/MONITORING.md` for the operating guide.
 - The current network model allows private VCN routing but does not configure
   cross-cluster service discovery.

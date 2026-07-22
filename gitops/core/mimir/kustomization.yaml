@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: monitoring
 resources:
   - configmap.yaml
-  - pvc.yaml
+  - secret.yaml
+  - migration-configmap.yaml
   - deployment.yaml
   - service.yaml

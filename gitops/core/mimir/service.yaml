@@ -2,7 +2,13 @@ apiVersion: v1
 kind: Service
 metadata:
   name: mimir
+  annotations:
+    oci.oraclecloud.com/load-balancer-type: "nlb"
+    oci.oraclecloud.com/reserved-private-ips: '["${MIMIR_PRIVATE_IP_ID}"]'
+    service.beta.kubernetes.io/oci-load-balancer-internal: "true"
+    service.beta.kubernetes.io/oci-load-balancer-subnet1: "${MIMIR_PRIVATE_SUBNET_ID}"
 spec:
+  type: LoadBalancer
   selector:
     app.kubernetes.io/name: mimir
   ports:

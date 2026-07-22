@@ -533,16 +533,16 @@ dynamic-group matching rule if other compute workloads share the compartment.
 
 ## Monitoring in tools
 
-The tools cluster runs kube-prometheus-stack for Kubernetes metrics, recording
-rules, node exporter, kube-state-metrics, and Alertmanager. Prometheus keeps a
-short local three-day window and remote-writes samples to the single-process
-Mimir deployment in the `monitoring` namespace. Grafana has Mimir configured as
-its default Prometheus-compatible datasource.
+All three clusters run kube-prometheus-stack collectors with `cluster` and
+`environment` labels. Prometheus keeps a short local three-day window and
+remote-writes to the single-process Mimir deployment in tools through a private
+OCI Network Load Balancer. Mimir stores blocks, ruler data, and Alertmanager
+state in a private OCI Object Storage bucket; credentials are created by
+Terraform, stored in OCI Vault, and delivered with External Secrets.
 
-This first Mimir profile uses a 15 GiB Longhorn volume and filesystem storage,
-so it is intentionally single-node and suitable for this small tools cluster.
-It is not an HA or cross-cluster metrics store. The upgrade path is documented
-in [docs/MONITORING.md](docs/MONITORING.md).
+Grafana in tools uses Mimir as its default Prometheus-compatible datasource and
+ships fleet, per-cluster, and platform-operations dashboards. See
+[docs/MONITORING.md](docs/MONITORING.md) for rollout and smoke tests.
 
 ## Validation and operations
 

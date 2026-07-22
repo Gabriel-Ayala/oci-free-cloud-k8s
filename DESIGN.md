@@ -120,12 +120,14 @@ Longhorn select `storageClassName: longhorn`. OCI File Storage CSI should be
 evaluated separately for `ReadWriteMany` requirements.
 
 The deployed tools baseline includes Grafana with the OCI Metrics datasource
-plugin, direct Keycloak authentication, and a Contour route. It also runs
-kube-prometheus-stack and a single-process Mimir deployment. Prometheus keeps a
-short local retention window and remote-writes to Mimir, which Grafana uses as
-its default Prometheus-compatible datasource. Mimir uses a 15 GiB Longhorn
-volume with filesystem storage for this small-cluster profile; it must move to
-OCI Object Storage and multiple replicas before production-scale use.
+plugin, direct Keycloak authentication, and a Contour route. All three clusters
+run kube-prometheus-stack collectors and remote-write to the single-process
+Mimir deployment in tools through a private OCI Network Load Balancer. Mimir
+uses a private OCI Object Storage bucket for blocks, ruler data, and
+Alertmanager state; Terraform creates the bucket and dedicated IAM user,
+External Secrets reads the Vault credentials, and Grafana queries Mimir as its
+default Prometheus-compatible datasource. The single Mimir replica remains a
+resource-conscious starting point; HA Mimir is a later scaling step.
 
 CloudNativePG is installed in all three clusters as an operator-only baseline.
 The Flux roots point to the shared `gitops/core/cloudnative-pg` manifests,

@@ -10,6 +10,7 @@ resources:
   - longhorn-route.yaml
   - longhorn-auth.yaml
   - oidc-rbac.yaml
+  - monitoring/flux.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml
   - contour.yaml

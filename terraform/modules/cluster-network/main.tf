@@ -47,6 +47,15 @@ resource "oci_core_drg_attachment" "this" {
   drg_route_table_id = var.drg_route_table_id
 }
 
+resource "oci_core_private_ip" "mimir" {
+  count = var.reserve_mimir_private_ip ? 1 : 0
+
+  display_name = "${var.cluster_name}-mimir-private-ip"
+  ip_address   = trimspace(var.mimir_private_ip_address) != "" ? var.mimir_private_ip_address : null
+  lifetime     = "RESERVED"
+  subnet_id    = oci_core_subnet.private.id
+}
+
 resource "oci_core_security_list" "private" {
   compartment_id = var.compartment_id
   vcn_id         = module.vcn.vcn_id

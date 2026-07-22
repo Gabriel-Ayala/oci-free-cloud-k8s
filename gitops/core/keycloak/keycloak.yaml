@@ -1,0 +1,40 @@
+apiVersion: k8s.keycloak.org/v2alpha1
+kind: Keycloak
+metadata:
+  name: keycloak
+  namespace: keycloak
+spec:
+  instances: 2
+  image: quay.io/keycloak/keycloak:26.7.0
+  startOptimized: false
+  resources:
+    requests:
+      cpu: 500m
+      memory: 768Mi
+    limits:
+      cpu: "1"
+      memory: 1536Mi
+  db:
+    vendor: postgres
+    host: keycloak-postgres-rw.keycloak.svc
+    port: 5432
+    database: keycloak
+    usernameSecret:
+      name: keycloak-postgres-app
+      key: username
+    passwordSecret:
+      name: keycloak-postgres-app
+      key: password
+  bootstrapAdmin:
+    user:
+      secret: keycloak-bootstrap-admin
+  hostname:
+    hostname: https://keycloak-inova.hackyard.dev
+  proxy:
+    headers: xforwarded
+  http:
+    httpEnabled: true
+    serviceName: keycloak
+    serviceHttpPort: 8080
+  ingress:
+    enabled: false

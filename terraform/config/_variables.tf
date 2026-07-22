@@ -136,6 +136,17 @@ variable "enable_external_secrets" {
   default     = false
 }
 
+variable "enable_keycloak" {
+  description = "Generate and store the tools Keycloak bootstrap admin password in OCI Vault"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.enable_keycloak || var.enable_external_secrets
+    error_message = "enable_keycloak requires enable_external_secrets so the bootstrap password can be stored in OCI Vault."
+  }
+}
+
 variable "enable_ingress" {
   description = "Create OCI load-balancer integration resources"
   type        = bool

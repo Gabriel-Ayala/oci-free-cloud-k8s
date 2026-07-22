@@ -8,6 +8,7 @@ resources:
   - cloudnative-pg.yaml
   - keycloak-postgres-plugin.yaml
   - keycloak-postgres.yaml
+  - keycloak.yaml
   - external-secrets.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml

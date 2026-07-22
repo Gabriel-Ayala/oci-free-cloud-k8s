@@ -15,6 +15,17 @@ module "externalsecrets" {
   ]
 }
 
+module "keycloak_admin" {
+  source = "./modules/keycloak-admin"
+  count  = var.enable_keycloak ? 1 : 0
+
+  compartment_id = var.compartment_id
+  vault_id       = module.externalsecrets[0].vault_id
+  vault_key_id   = module.externalsecrets[0].key_id
+
+  depends_on = [module.externalsecrets]
+}
+
 module "fluxcd" {
   source = "./modules/fluxcd"
 

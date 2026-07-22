@@ -1,0 +1,26 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./gitops/core/keycloak
+  prune: true
+  dependsOn:
+    - name: keycloak-operator
+    - name: keycloak-postgres
+    - name: external-secrets
+    - name: contour-gateway
+  sourceRef:
+    kind: GitRepository
+    name: flux-system
+  healthChecks:
+    - apiVersion: k8s.keycloak.org/v2alpha1
+      kind: Keycloak
+      name: keycloak
+      namespace: keycloak
+    - apiVersion: gateway.networking.k8s.io/v1
+      kind: HTTPRoute
+      name: keycloak
+      namespace: keycloak

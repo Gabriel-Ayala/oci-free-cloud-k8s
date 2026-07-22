@@ -21,6 +21,7 @@ inputs = {
   kubeconfig_path                 = "${get_repo_root()}/terraform/.kube.tools.config"
   gitops_path                     = "gitops/tools"
   enable_external_secrets         = true
+  enable_keycloak                 = true
   external_secrets_principal_type = "InstancePrincipal"
   create_external_secrets_vault   = true
   enable_longhorn_backup          = true

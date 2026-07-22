@@ -9,6 +9,12 @@ resource "oci_objectstorage_bucket" "this" {
   access_type    = "NoPublicAccess"
   storage_tier   = "Standard"
   versioning     = "Enabled"
+
+  lifecycle {
+    # The bucket contains Longhorn backups and must never be replaced during
+    # provider refreshes or unrelated configuration changes.
+    ignore_changes = [namespace]
+  }
 }
 
 resource "oci_identity_user" "this" {

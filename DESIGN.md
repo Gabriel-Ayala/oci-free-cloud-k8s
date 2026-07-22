@@ -147,8 +147,11 @@ The `gitops/core/keycloak` manifests deploy two Keycloak instances at
 `https://keycloak-inova.hackyard.dev`, using the CNPG read-write service and
 the default master realm. OpenTofu generates the bootstrap admin password and
 stores it in OCI Vault; External Secrets creates the bootstrap Secret. The
-HTTPRoute uses the shared Contour Gateway with edge TLS. Custom realms,
-clients, and users are deliberately outside this baseline.
+HTTPRoute uses the shared Contour Gateway with edge TLS. Cloudflare DNS uses
+an explicit DNS-only A record for `keycloak-inova.hackyard.dev` pointing to
+the tools LoadBalancer; it must not fall through to the proxied wildcard
+record for another cluster. Custom realms, clients, and users are deliberately
+outside this baseline.
 
 The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
 add-ons. These are not part of the current minimal cluster roots and are not

@@ -246,10 +246,12 @@ curl -sk --resolve keycloak-inova.hackyard.dev:443:<CONTOUR_PUBLIC_IP> \
   https://keycloak-inova.hackyard.dev/realms/master/.well-known/openid-configuration
 ```
 
-The public DNS name must resolve to the Contour LoadBalancer. If Cloudflare
-proxying is enabled, use an SSL mode compatible with the origin certificate;
-a Cloudflare `525` is separate from Keycloak and HTTPRoute health. The direct
-origin test above validates the OIDC endpoint without the proxy.
+The explicit Cloudflare DNS-only A record for `keycloak-inova.hackyard.dev`
+must target the tools Contour LoadBalancer (`163.176.140.27`). Do not rely on
+the proxied wildcard record, because it targets a different cluster. If the
+record is changed to proxied mode, use an SSL mode compatible with the origin
+certificate. The direct origin test above validates the OIDC endpoint without
+the proxy.
 
 Keycloak Operator upgrades remain manual by design. Review the Keycloak release
 notes, approve the generated InstallPlan in `keycloak`, and test in a

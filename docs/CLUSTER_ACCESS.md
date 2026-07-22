@@ -84,6 +84,14 @@ OCI IAM remains the break-glass access method for every cluster.
 
 Group membership is managed in the Keycloak `platform` realm.
 
+After changing group membership, clear the local OIDC token cache and log in
+again so the new `groups` claim is issued:
+
+```sh
+kubectl oidc-login clean
+kubectl get nodes
+```
+
 ## Protected Longhorn UIs
 
 Each Longhorn UI is behind a dedicated OAuth2 Proxy using Keycloak:

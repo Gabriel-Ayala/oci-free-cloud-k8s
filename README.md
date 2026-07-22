@@ -187,6 +187,34 @@ When creating a database cluster, choose the storage class deliberately:
 archiving, credentials, network policy, and the desired instance count must be
 designed before adding a `Cluster` resource.
 
+## Keycloak Operator
+
+The tools cluster installs Operator Lifecycle Manager (OLM) `v0.45.0` and
+uses it to install the Keycloak Operator in the dedicated `keycloak` namespace.
+The Subscription uses the `fast` channel and manual InstallPlan approval. The
+operator is installed in `OwnNamespace` mode and does not watch staging or
+production. The current approved CSV is Keycloak Operator `26.7.0`.
+
+This rollout installs OLM, the OperatorHub catalog, the Keycloak Operator, and
+its CRDs only. It does not create a Keycloak server, realm, database, route,
+TLS certificate, or admin credential.
+
+Verify it in tools with:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl -n flux-system get kustomization olm keycloak-operator
+kubectl -n olm get pods,catalogsource
+kubectl -n keycloak get subscription,installplan,clusterserviceversion
+kubectl -n keycloak get deployment keycloak-operator
+kubectl get crd keycloaks.k8s.keycloak.org keycloakrealmimports.k8s.keycloak.org
+```
+
+Keycloak Operator upgrades remain manual by design. Review the Keycloak release
+notes, approve the generated InstallPlan in `keycloak`, and test in a
+non-production environment before upgrading. See the [official Keycloak
+Operator installation guide](https://www.keycloak.org/operator/installation).
+
 Flux reads the configured remote Git repository. Changes made locally do not
 become persistent Flux state until they are committed and pushed to the branch
 configured in the Flux source.

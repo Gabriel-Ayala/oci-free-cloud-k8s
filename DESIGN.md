@@ -132,6 +132,12 @@ select `oci-bv` or `longhorn` explicitly and define backup/WAL retention,
 credentials, network access, and replica placement as part of the workload
 design.
 
+The tools cluster also installs OLM `v0.45.0` and the Keycloak Operator through
+the OperatorHub catalog. The Subscription uses the `fast` channel with manual
+InstallPlan approval and an `OwnNamespace` OperatorGroup in `keycloak`. This
+keeps the identity operator scoped to the tools cluster and its own namespace;
+no Keycloak server or database resources are deployed by this baseline.
+
 The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
 add-ons. These are not part of the current minimal cluster roots and are not
 considered deployed until explicitly enabled and validated.

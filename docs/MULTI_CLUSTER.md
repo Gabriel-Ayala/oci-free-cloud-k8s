@@ -301,6 +301,22 @@ storage or `longhorn` for Longhorn replication. Add database backups, WAL
 archiving, secrets, network policy, and topology-specific replica settings
 before treating a PostgreSQL cluster as production-ready.
 
+### Keycloak Operator in tools
+
+The tools root installs OLM `v0.45.0` from the pinned upstream release
+manifests, then subscribes to the OperatorHub `keycloak-operator` package in
+the `fast` channel. The operator runs in the dedicated `keycloak` namespace
+with an `OwnNamespace` OperatorGroup, so staging and production are not
+watched. The initial InstallPlan was manually approved and installed Keycloak
+Operator `26.7.0` successfully.
+
+The rollout contains only OLM, the catalog, the operator, and its CRDs. It does
+not create a Keycloak server, realm, database, route, certificate, or admin
+secret. Future Keycloak resources need an explicit database, storage, ingress,
+TLS, and secret design. Operator upgrades remain manual because the Keycloak
+documentation warns that automatic upgrades can also upgrade the managed
+Keycloak version.
+
 ### Contour ingress in every cluster
 
 The three cluster roots each install the shared Contour configuration from

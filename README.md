@@ -224,12 +224,14 @@ production. The current approved CSV is Keycloak Operator `26.7.0`.
 
 The tools cluster also deploys two Keycloak instances through
 `gitops/core/keycloak`. Keycloak uses the `keycloak-postgres-rw` CNPG service,
-the generated `keycloak-postgres-app` Secret, and the default master realm.
+the generated `keycloak-postgres-app` Secret, and the dedicated `platform`
+realm. Its clients and groups are documented in
+[`docs/CLUSTER_ACCESS.md`](docs/CLUSTER_ACCESS.md).
 OpenTofu generates the bootstrap administrator password, stores it in OCI
 Vault as `keycloak-tools-admin-password`, and External Secrets syncs it to the
 cluster. The shared Contour Gateway exposes
 `https://keycloak-inova.hackyard.dev` with edge TLS. Custom realms, clients,
-and users are intentionally not provisioned.
+and users are managed in the Keycloak `platform` realm.
 
 Verify it in tools with:
 
@@ -352,6 +354,12 @@ The tools DNS record is managed outside the minimal tools ExternalDNS profile;
 staging and production records are managed by their respective ExternalDNS
 instances. The UI is an administrative surface and must be protected before
 being used beyond controlled testing.
+
+Each Longhorn route is protected by a cluster-local OAuth2 Proxy using the
+Keycloak `platform` realm. OAuth2 Proxy reverse-proxies the Longhorn frontend;
+the frontend Service is not exposed directly. See
+[`docs/CLUSTER_ACCESS.md`](docs/CLUSTER_ACCESS.md) for login URLs, group
+authorization, and troubleshooting.
 
 OKE Oracle Linux nodes must have `iscsi-initiator-utils`, `nfs-utils`,
 `cryptsetup`, and `device-mapper` installed, with `iscsid` enabled and the
@@ -494,8 +502,8 @@ kubectl get externalsecret -A
 ## Grafana in tools
 
 Grafana is a standalone HelmRelease in the `grafana` namespace. It uses a
-ClusterIP service behind the tools Contour Gateway, local basic authentication,
-disabled persistence, and the OCI Metrics datasource plugin. Its public route
+ClusterIP service behind the tools Contour Gateway, direct Keycloak OAuth
+authentication, disabled persistence, and the OCI Metrics datasource plugin. Its public route
 is `https://grafana-inova.hackyard.dev`; Cloudflare DNS must point that name to
 the tools Contour load-balancer address.
 

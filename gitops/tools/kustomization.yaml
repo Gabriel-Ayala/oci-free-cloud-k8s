@@ -16,4 +16,5 @@ resources:
   - contour-gateway.yaml
   - longhorn.yaml
   - longhorn-route.yaml
+  - longhorn-auth.yaml
   - grafana/flux.yaml

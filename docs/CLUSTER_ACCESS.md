@@ -1,0 +1,108 @@
+# Cluster access and application authentication
+
+This repository uses Keycloak directly for OIDC. Dex and Teleport are not
+required by the active profiles.
+
+## Identity endpoint
+
+```text
+https://keycloak-inova.hackyard.dev/realms/platform
+```
+
+The Kubernetes OIDC client is `kubernetes`. Keycloak emits the
+`preferred_username` and `groups` claims. OKE prefixes both values with `oidc:`
+before Kubernetes RBAC evaluates them.
+
+## Kubernetes API access
+
+Staging and production use native OKE OIDC. Install the
+[`kubectl oidc-login`](https://github.com/int128/kubelogin) plugin and run:
+
+```sh
+kubectl oidc-login setup \
+  --oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --oidc-client-id=kubernetes
+```
+
+Then use the generated kubeconfig context:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.staging.config"
+kubectl get nodes
+kubectl get pods -A
+
+export KUBECONFIG="$PWD/terraform/.kube.production.config"
+kubectl get nodes
+kubectl get pods -A
+```
+
+The current tools cluster is `BASIC_CLUSTER`, so native OIDC is not enabled
+there. Use OCI IAM until tools is migrated or recreated as an Enhanced
+VCN-native cluster:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl get nodes
+```
+
+OCI IAM remains the break-glass access method for every cluster.
+
+## RBAC groups
+
+| Keycloak group | Kubernetes scope |
+|---|---|
+| `platform-admins` | cluster administrator |
+| `platform-viewers` | cluster-wide read-only |
+| `staging-admins` | staging administrator |
+| `production-admins` | production administrator |
+
+Group membership is managed in the Keycloak `platform` realm.
+
+## Protected Longhorn UIs
+
+Each Longhorn UI is behind a dedicated OAuth2 Proxy using Keycloak:
+
+```text
+https://storage-tools.hackyard.dev
+https://storage-staging.hackyard.dev
+https://storage-production.hackyard.dev
+```
+
+Allowed groups are environment-specific plus `platform-admins`:
+
+```text
+longhorn-tools-admins
+longhorn-staging-admins
+longhorn-production-admins
+```
+
+Verify the protected route with:
+
+```sh
+kubectl -n flux-system get kustomization longhorn-auth
+kubectl -n longhorn get helmrelease,externalsecret,secret,pods,svc
+curl -I https://storage-tools.hackyard.dev
+```
+
+Unauthenticated requests should redirect to Keycloak; users outside the
+allowed groups should receive HTTP 403.
+
+## Grafana
+
+Tools Grafana uses the same Keycloak realm through its generic OAuth
+integration. `platform-admins` receive the Grafana Administrator role; other
+authenticated users receive Viewer access.
+
+## Secrets and troubleshooting
+
+Keycloak client secrets and OAuth2 Proxy cookie secrets are stored in OCI Vault
+and synchronized by External Secrets. Never commit them, kubeconfigs, or
+generated credentials.
+
+```sh
+kubectl get clustersecretstore oracle-vault
+kubectl get externalsecret -A
+kubectl -n flux-system get kustomizations
+kubectl -n longhorn logs deploy/longhorn-auth
+curl -fsS https://keycloak-inova.hackyard.dev/realms/platform/.well-known/openid-configuration | jq .issuer
+```

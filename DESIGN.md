@@ -145,13 +145,24 @@ InstallPlan approval and an `OwnNamespace` OperatorGroup in `keycloak`. This
 keeps the identity operator scoped to the tools cluster and its own namespace.
 The `gitops/core/keycloak` manifests deploy two Keycloak instances at
 `https://keycloak-inova.hackyard.dev`, using the CNPG read-write service and
-the default master realm. OpenTofu generates the bootstrap admin password and
+the dedicated `platform` realm. OpenTofu generates the bootstrap admin password and
 stores it in OCI Vault; External Secrets creates the bootstrap Secret. The
 HTTPRoute uses the shared Contour Gateway with edge TLS. Cloudflare DNS uses
 an explicit DNS-only A record for `keycloak-inova.hackyard.dev` pointing to
 the tools LoadBalancer; it must not fall through to the proxied wildcard
-record for another cluster. Custom realms, clients, and users are deliberately
-outside this baseline.
+record for another cluster. The realm provides direct OIDC clients for the
+Kubernetes API, Grafana, and the protected Longhorn UIs.
+
+Staging and production use native OKE OIDC with Keycloak as the issuer. Their
+Kubernetes APIs map the `preferred_username` and `groups` claims with an
+`oidc:` prefix and authorize them through GitOps-managed RBAC. The tools cluster
+remains OCI IAM-authenticated while it is a Basic cluster; OKE requires an
+Enhanced VCN-native cluster for external OIDC.
+
+Each Longhorn UI is fronted by a dedicated OAuth2 Proxy deployment using a
+Keycloak client and an environment-specific group. Dex and Teleport remain
+optional manifests only and are not part of the active authentication stack.
+See [`docs/CLUSTER_ACCESS.md`](docs/CLUSTER_ACCESS.md).
 
 The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
 add-ons. These are not part of the current minimal cluster roots and are not

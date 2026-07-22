@@ -11,6 +11,7 @@ resources:
   - longhorn-auth.yaml
   - oidc-rbac.yaml
   - monitoring/flux.yaml
+  - monitoring-collectors.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml
   - contour.yaml

@@ -88,6 +88,10 @@ spec:
       forceDeployDashboards: true
       namespaceOverride: grafana
       forceDeployDatasources: true
+      sidecar:
+        dashboards:
+          annotations:
+            grafana_folder: Kubernetes
     alertmanager:
       alertmanagerSpec: {}
       config:

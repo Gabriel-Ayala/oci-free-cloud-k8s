@@ -185,7 +185,7 @@ The tools cluster now includes the Keycloak PostgreSQL foundation in
 `gitops/core/keycloak-postgres`. It runs three PostgreSQL instances with one
 100 GiB `oci-bv` PVC per instance, uses OCI Block Volume CSI, and creates the
 `keycloak` database owned by `keycloak`. CNPG generates the application Secret
-`keycloak-postgres-app`; no Keycloak server is deployed yet.
+`keycloak-postgres-app`, which is consumed by the tools Keycloak deployment.
 
 The Barman Cloud CNPG-I plugin archives WAL and scheduled physical backups to
 the existing OCI Object Storage bucket under
@@ -222,10 +222,14 @@ The Subscription uses the `fast` channel and manual InstallPlan approval. The
 operator is installed in `OwnNamespace` mode and does not watch staging or
 production. The current approved CSV is Keycloak Operator `26.7.0`.
 
-This rollout installs OLM, the OperatorHub catalog, the Keycloak Operator, and
-its CRDs. It does not create a Keycloak server, realm, route, TLS certificate,
-or admin credential. The separate CNPG manifest creates only the PostgreSQL
-database foundation described above.
+The tools cluster also deploys two Keycloak instances through
+`gitops/core/keycloak`. Keycloak uses the `keycloak-postgres-rw` CNPG service,
+the generated `keycloak-postgres-app` Secret, and the default master realm.
+OpenTofu generates the bootstrap administrator password, stores it in OCI
+Vault as `keycloak-tools-admin-password`, and External Secrets syncs it to the
+cluster. The shared Contour Gateway exposes
+`https://keycloak-inova.hackyard.dev` with edge TLS. Custom realms, clients,
+and users are intentionally not provisioned.
 
 Verify it in tools with:
 
@@ -236,7 +240,16 @@ kubectl -n olm get pods,catalogsource
 kubectl -n keycloak get subscription,installplan,clusterserviceversion
 kubectl -n keycloak get deployment keycloak-operator
 kubectl get crd keycloaks.k8s.keycloak.org keycloakrealmimports.k8s.keycloak.org
+kubectl -n flux-system get kustomization keycloak
+kubectl -n keycloak get externalsecret,secret,keycloak,pods,httproute
+curl -sk --resolve keycloak-inova.hackyard.dev:443:<CONTOUR_PUBLIC_IP> \
+  https://keycloak-inova.hackyard.dev/realms/master/.well-known/openid-configuration
 ```
+
+The public DNS name must resolve to the Contour LoadBalancer. If Cloudflare
+proxying is enabled, use an SSL mode compatible with the origin certificate;
+a Cloudflare `525` is separate from Keycloak and HTTPRoute health. The direct
+origin test above validates the OIDC endpoint without the proxy.
 
 Keycloak Operator upgrades remain manual by design. Review the Keycloak release
 notes, approve the generated InstallPlan in `keycloak`, and test in a

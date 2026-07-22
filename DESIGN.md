@@ -130,22 +130,25 @@ which install chart `0.29.0` and operator `1.30.0` in `cnpg-system`. The tools
 cluster additionally deploys `keycloak-postgres`: three CNPG instances with
 100 GiB PVCs using the native `oci-bv` OCI Block Volume CSI StorageClass. The
 cluster initializes the `keycloak` database and owner, and CNPG generates the
-`keycloak-postgres-app` Secret for a future Keycloak resource.
+`keycloak-postgres-app` Secret consumed by the tools Keycloak resource.
 
 Tools also installs the Barman Cloud CNPG-I plugin and an ObjectStore backed by
 the existing OCI Object Storage bucket, using the dedicated prefix
 `cnpg/keycloak-postgres/`, Vault-sourced credentials, WAL archiving, and a
-30-day retention policy. Staging and production remain operator-only. A
-Keycloak server, restore test, ingress, and admin secret are intentionally not
-part of this database foundation. OCI S3 compatibility requires path-style
+30-day retention policy. Staging and production remain operator-only. OCI S3 compatibility requires path-style
 addressing and the Barman checksum workaround; the backup IAM user is also
 allowed to inspect this specific bucket so existing-bucket checks succeed.
 
 The tools cluster also installs OLM `v0.45.0` and the Keycloak Operator through
 the OperatorHub catalog. The Subscription uses the `fast` channel with manual
 InstallPlan approval and an `OwnNamespace` OperatorGroup in `keycloak`. This
-keeps the identity operator scoped to the tools cluster and its own namespace;
-no Keycloak server or database resources are deployed by this baseline.
+keeps the identity operator scoped to the tools cluster and its own namespace.
+The `gitops/core/keycloak` manifests deploy two Keycloak instances at
+`https://keycloak-inova.hackyard.dev`, using the CNPG read-write service and
+the default master realm. OpenTofu generates the bootstrap admin password and
+stores it in OCI Vault; External Secrets creates the bootstrap Secret. The
+HTTPRoute uses the shared Contour Gateway with edge TLS. Custom realms,
+clients, and users are deliberately outside this baseline.
 
 The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
 add-ons. These are not part of the current minimal cluster roots and are not

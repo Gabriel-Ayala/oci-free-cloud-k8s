@@ -124,6 +124,14 @@ datasource plugin, local basic authentication, no persistent volume, and a
 Contour route. The full Prometheus/Alertmanager stack is present only in the
 optional core profile and requires its own secrets, storage, and routes.
 
+CloudNativePG is installed in all three clusters as an operator-only baseline.
+The Flux roots point to the shared `gitops/core/cloudnative-pg` manifests,
+which install chart `0.29.0` and operator `1.30.0` in `cnpg-system`. No
+PostgreSQL `Cluster` object is included yet. Future database manifests must
+select `oci-bv` or `longhorn` explicitly and define backup/WAL retention,
+credentials, network access, and replica placement as part of the workload
+design.
+
 The full profile also contains Dex, Teleport, S3 proxy, Lychee, and Flux
 add-ons. These are not part of the current minimal cluster roots and are not
 considered deployed until explicitly enabled and validated.

@@ -164,6 +164,29 @@ their required domains, credentials, storage, and OCI integrations.
 Longhorn is an exception: it is enabled explicitly in all three cluster roots
 as the baseline distributed block storage layer.
 
+## CloudNativePG
+
+CloudNativePG is installed in the `cnpg-system` namespace in tools, staging,
+and production. The Flux configuration pins Helm chart `0.29.0`, which
+installs CloudNativePG operator `1.30.0`. The installation creates the
+operator and its PostgreSQL CRDs only; it does not create a PostgreSQL
+database cluster, users, passwords, or PVCs.
+
+Verify the operator in a cluster with:
+
+```sh
+kubectl -n flux-system get kustomization cloudnative-pg
+kubectl -n cnpg-system get helmrelease cloudnative-pg
+kubectl -n cnpg-system get deployment cloudnative-pg
+kubectl get crd | grep postgresql.cnpg.io
+```
+
+When creating a database cluster, choose the storage class deliberately:
+`oci-bv` uses OKE's native OCI Block Volume CSI and is the current default;
+`longhorn` uses the replicated Longhorn layer. Database backups, WAL
+archiving, credentials, network policy, and the desired instance count must be
+designed before adding a `Cluster` resource.
+
 Flux reads the configured remote Git repository. Changes made locally do not
 become persistent Flux state until they are committed and pushed to the branch
 configured in the Flux source.

@@ -279,6 +279,28 @@ Until then, a local smoke deployment can be applied with:
 kubectl apply -k gitops/tools/grafana
 ```
 
+### CloudNativePG operator
+
+Each cluster installs CloudNativePG through its own Flux root and the shared
+`gitops/core/cloudnative-pg` manifests. The pinned Helm chart is `0.29.0`,
+installing operator `1.30.0` in `cnpg-system`. The deployment is operator-only:
+there is no PostgreSQL `Cluster`, credential Secret, PVC, or backup schedule in
+this rollout.
+
+Verify the installation with:
+
+```sh
+kubectl -n flux-system get kustomization cloudnative-pg
+kubectl -n cnpg-system get helmrelease cloudnative-pg
+kubectl -n cnpg-system get deployment cloudnative-pg,pods
+kubectl get crd | grep postgresql.cnpg.io
+```
+
+Future database clusters should choose `oci-bv` for OCI-native Block Volume
+storage or `longhorn` for Longhorn replication. Add database backups, WAL
+archiving, secrets, network policy, and topology-specific replica settings
+before treating a PostgreSQL cluster as production-ready.
+
 ### Contour ingress in every cluster
 
 The three cluster roots each install the shared Contour configuration from

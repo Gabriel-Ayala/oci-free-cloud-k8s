@@ -52,6 +52,7 @@ spec:
         client_id: $__file{/etc/secrets/keycloak_client/client-id}
         client_secret: $__file{/etc/secrets/keycloak_client/client-secret}
         scopes: openid profile email
+        allowed_groups: platform-admins grafana-viewers
         email_attribute_path: email
         auth_url: https://keycloak-inova.hackyard.dev/realms/platform/protocol/openid-connect/auth
         token_url: https://keycloak-inova.hackyard.dev/realms/platform/protocol/openid-connect/token

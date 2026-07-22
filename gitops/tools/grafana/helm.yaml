@@ -68,10 +68,11 @@ spec:
     plugins:
       - oci-metrics-datasource
     sidecar:
-      dashboards:
-        enabled: true
-        label: grafana_dashboard
-        searchNamespace: grafana
+        dashboards:
+          enabled: true
+          label: grafana_dashboard
+          folderAnnotation: grafana_folder
+          searchNamespace: grafana
         logLevel: INFO
     datasources:
       datasources.yaml:

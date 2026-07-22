@@ -7,13 +7,33 @@ resources:
   - helm.yaml
   - httproute.yaml
 configMapGenerator:
-  - name: observability-dashboards
+  - name: kubernetes-dashboards
     files:
       - dashboards/kubernetes/fleet-overview.json
       - dashboards/kubernetes/cluster-resources.json
-      - dashboards/platform/platform-operations.json
+    options:
+      annotations:
+        grafana_folder: Kubernetes
+      labels:
+        grafana_dashboard: "1"
+        app.kubernetes.io/part-of: observability
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+  - name: mimir-dashboards
+    files:
       - dashboards/mimir/mimir-prometheus.json
     options:
+      annotations:
+        grafana_folder: Mimir
+      labels:
+        grafana_dashboard: "1"
+        app.kubernetes.io/part-of: observability
+        kustomize.toolkit.fluxcd.io/substitute: disabled
+  - name: platform-dashboards
+    files:
+      - dashboards/platform/platform-operations.json
+    options:
+      annotations:
+        grafana_folder: Platform
       labels:
         grafana_dashboard: "1"
         app.kubernetes.io/part-of: observability

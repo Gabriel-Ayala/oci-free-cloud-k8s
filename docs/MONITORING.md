@@ -88,6 +88,8 @@ The Grafana dashboard sidecar imports dashboards organized by product:
 - `gitops/core/grafana/dashboards/bkw/`: BKW product dashboards.
 
 The cluster selector is available on the cluster and operations dashboards.
+The `grafana_folder` ConfigMap annotation maps these product groups to Grafana
+folders so the repository layout and Grafana UI stay aligned.
 
 ## Smoke tests
 

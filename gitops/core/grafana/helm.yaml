@@ -71,6 +71,7 @@ spec:
         logLevel: INFO
         searchNamespace: grafana
         label: grafana_dashboard
+        folderAnnotation: grafana_folder
       datasources:
         enabled: true
         searchNamespace: grafana

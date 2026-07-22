@@ -29,6 +29,7 @@ resource "oci_identity_policy" "this" {
   description    = "Allow the Longhorn backup user to manage objects in its bucket"
 
   statements = [
+    "Allow any-user to inspect buckets in tenancy where all {request.principal.type = 'user', request.principal.id = '${oci_identity_user.this.id}', target.bucket.name = '${var.bucket_name}'}",
     "Allow any-user to manage objects in tenancy where all {request.principal.type = 'user', request.principal.id = '${oci_identity_user.this.id}', target.bucket.name = '${var.bucket_name}'}",
   ]
 }

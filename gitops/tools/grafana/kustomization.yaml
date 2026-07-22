@@ -12,6 +12,7 @@ configMapGenerator:
       - dashboards/kubernetes/fleet-overview.json
       - dashboards/kubernetes/cluster-resources.json
       - dashboards/kubernetes/node-pods-fleet.json
+      - dashboards/kubernetes/networking-workload-fleet.json
     options:
       annotations:
         grafana_folder: Kubernetes

@@ -1,0 +1,25 @@
+{
+  "annotations":{"list":[]},
+  "editable":true,
+  "graphTooltip":1,
+  "panels":[
+    {"type":"stat","title":"Bytes received","gridPos":{"h":8,"w":12,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sort_desc(sum(rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (environment,cluster,namespace,pod) group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\",workload=~\"$workload\",workload_type=~\"$workload_type\"}) by (pod))","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"stat","title":"Bytes transmitted","gridPos":{"h":8,"w":12,"x":12,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sort_desc(sum(rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (environment,cluster,namespace,pod) group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\",workload=~\"$workload\",workload_type=~\"$workload_type\"}) by (pod))","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Receive bandwidth","gridPos":{"h":8,"w":12,"x":0,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(container_network_receive_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (environment,cluster,namespace,pod) group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\",workload=~\"$workload\",workload_type=~\"$workload_type\"}) by (pod)","legendFormat":"{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Transmit bandwidth","gridPos":{"h":8,"w":12,"x":12,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(container_network_transmit_bytes_total{job=\"kubelet\",metrics_path=\"/metrics/cadvisor\",environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}[$__rate_interval]) * on (environment,cluster,namespace,pod) group_left(workload,workload_type) namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\",workload=~\"$workload\",workload_type=~\"$workload_type\"}) by (pod)","legendFormat":"{{pod}}","refId":"A"}]}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["kubernetes","networking","workload","fleet","mimir"],
+  "templating":{"list":[
+    {"name":"environment","label":"Environment","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_pod_info, environment)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"cluster","label":"Cluster","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_pod_info{environment=~\"$environment\"}, cluster)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"namespace","label":"Namespace","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_pod_info{environment=~\"$environment\",cluster=~\"$cluster\"}, namespace)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"workload","label":"Workload","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}, workload)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"workload_type","label":"Workload type","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(namespace_workload_pod:kube_pod_owner:relabel{environment=~\"$environment\",cluster=~\"$cluster\",namespace=~\"$namespace\"}, workload_type)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}}
+  ]},
+  "time":{"from":"now-1h","to":"now"},
+  "title":"Kubernetes Networking Workload (Fleet)",
+  "uid":"k8s-networking-workload-fleet",
+  "version":1
+}

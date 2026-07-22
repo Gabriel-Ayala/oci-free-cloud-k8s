@@ -1,0 +1,48 @@
+apiVersion: source.toolkit.fluxcd.io/v1
+kind: HelmRepository
+metadata:
+  name: oauth2-proxy
+  namespace: longhorn
+spec:
+  interval: 1h
+  url: https://oauth2-proxy.github.io/manifests
+---
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: longhorn-auth
+  namespace: longhorn
+spec:
+  interval: 10m
+  timeout: 5m
+  dependsOn:
+    - name: longhorn
+  chart:
+    spec:
+      chart: oauth2-proxy
+      version: "10.6.0"
+      sourceRef:
+        kind: HelmRepository
+        name: oauth2-proxy
+      interval: 1h
+  values:
+    fullnameOverride: longhorn-auth
+    config:
+      existingSecret: longhorn-keycloak-client
+      configFile: |-
+        provider = "keycloak-oidc"
+        oidc_issuer_url = "https://keycloak-inova.hackyard.dev/realms/platform"
+        redirect_url = "https://storage-staging.hackyard.dev/oauth2/callback"
+        upstreams = ["http://longhorn-frontend.longhorn.svc.cluster.local:80"]
+        email_domains = ["*"]
+        allowed_groups = ["longhorn-staging-admins", "platform-admins"]
+        scope = "openid profile email groups"
+        cookie_secure = true
+        reverse_proxy = true
+        pass_authorization_header = false
+        pass_access_token = false
+        set_xauthrequest = true
+        skip_provider_button = true
+    service:
+      type: ClusterIP
+      portNumber: 80

@@ -16,4 +16,11 @@ spec:
         key: ACCESS_SECRET_KEY
     wal:
       compression: gzip
+      archiveAdditionalCommandArgs:
+        - --addressing-style
+        - path
+    data:
+      additionalCommandArgs:
+        - --addressing-style
+        - path
   retentionPolicy: 30d

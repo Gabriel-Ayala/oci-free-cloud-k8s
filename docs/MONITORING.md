@@ -87,7 +87,21 @@ The Grafana dashboard sidecar imports dashboards organized by product:
   dashboards.
 - `gitops/core/grafana/dashboards/bkw/`: BKW product dashboards.
 
-The cluster selector is available on the cluster and operations dashboards.
+The Kubernetes dashboards use Mimir as their source of truth. Their selectors
+are chained so the available values stay scoped to the previous selection:
+
+- `Kubernetes Fleet Overview`: Environment → Cluster → Namespace.
+- `Kubernetes Cluster Resources`: Environment → Cluster → Namespace →
+  Workload. Node CPU and memory remain cluster-scoped; pod restarts and PVC
+  usage honor the namespace/workload filters where the metric has those
+  labels.
+- `Kubernetes Node Pods (Fleet)`: Environment → Cluster → Node.
+- `Kubernetes Networking Workload (Fleet)`: Environment → Cluster → Namespace
+  → Workload → Workload type.
+
+The cluster and operations dashboards are therefore safe to use across tools,
+staging, and production without mixing identically named namespaces or
+workloads.
 The `grafana_folder` ConfigMap annotation maps these product groups to Grafana
 folders so the repository layout and Grafana UI stay aligned.
 

@@ -36,7 +36,7 @@ spec:
         upstreams = ["http://longhorn-frontend.longhorn.svc.cluster.local:80"]
         email_domains = ["*"]
         allowed_groups = ["longhorn-staging-admins", "platform-admins"]
-        scope = "openid profile email groups"
+        scope = "openid profile email"
         cookie_secure = true
         reverse_proxy = true
         pass_authorization_header = false

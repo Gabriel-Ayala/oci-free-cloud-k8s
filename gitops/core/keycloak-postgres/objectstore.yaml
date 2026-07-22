@@ -1,0 +1,19 @@
+apiVersion: barmancloud.cnpg.io/v1
+kind: ObjectStore
+metadata:
+  name: keycloak-postgres-backups
+  namespace: keycloak
+spec:
+  configuration:
+    destinationPath: s3://oke-longhorn-backups/cnpg/keycloak-postgres/
+    endpointURL: https://gropzbh12v84.compat.objectstorage.sa-saopaulo-1.oci.customer-oci.com
+    s3Credentials:
+      accessKeyId:
+        name: keycloak-postgres-backup-credentials
+        key: ACCESS_KEY_ID
+      secretAccessKey:
+        name: keycloak-postgres-backup-credentials
+        key: ACCESS_SECRET_KEY
+    wal:
+      compression: gzip
+    retentionPolicy: 30d

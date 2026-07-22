@@ -1,0 +1,19 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: keycloak-postgres
+  namespace: keycloak
+spec:
+  instances: 3
+  storage:
+    storageClass: oci-bv
+    size: 100Gi
+  bootstrap:
+    initdb:
+      database: keycloak
+      owner: keycloak
+  plugins:
+    - name: barman-cloud.cloudnative-pg.io
+      isWALArchiver: true
+      parameters:
+        barmanObjectName: keycloak-postgres-backups

@@ -296,10 +296,20 @@ kubectl -n cnpg-system get deployment cloudnative-pg,pods
 kubectl get crd | grep postgresql.cnpg.io
 ```
 
-Future database clusters should choose `oci-bv` for OCI-native Block Volume
-storage or `longhorn` for Longhorn replication. Add database backups, WAL
-archiving, secrets, network policy, and topology-specific replica settings
-before treating a PostgreSQL cluster as production-ready.
+The tools cluster now has a concrete PostgreSQL workload for the future
+Keycloak deployment in `gitops/core/keycloak-postgres`. It uses three CNPG
+instances, three tools workers, and 100 GiB per instance through the native
+`oci-bv` OCI Block Volume CSI StorageClass. CNPG initializes database `keycloak`
+and owner `keycloak`, and generates `keycloak-postgres-app` for later Keycloak
+configuration.
+
+The Barman Cloud CNPG-I plugin sends WAL and scheduled physical backups to the
+existing OCI Object Storage bucket at
+`s3://oke-longhorn-backups/cnpg/keycloak-postgres/`. The access key is sourced
+from OCI Vault through External Secrets, and the ObjectStore retention policy
+is 30 days. This is deployed only in tools; staging and production retain the
+operator-only CNPG baseline. A restore test and the eventual Keycloak server
+resource are intentionally separate changes.
 
 ### Keycloak Operator in tools
 

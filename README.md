@@ -181,11 +181,33 @@ kubectl -n cnpg-system get deployment cloudnative-pg
 kubectl get crd | grep postgresql.cnpg.io
 ```
 
-When creating a database cluster, choose the storage class deliberately:
-`oci-bv` uses OKE's native OCI Block Volume CSI and is the current default;
-`longhorn` uses the replicated Longhorn layer. Database backups, WAL
-archiving, credentials, network policy, and the desired instance count must be
-designed before adding a `Cluster` resource.
+The tools cluster now includes the Keycloak PostgreSQL foundation in
+`gitops/core/keycloak-postgres`. It runs three PostgreSQL instances with one
+100 GiB `oci-bv` PVC per instance, uses OCI Block Volume CSI, and creates the
+`keycloak` database owned by `keycloak`. CNPG generates the application Secret
+`keycloak-postgres-app`; no Keycloak server is deployed yet.
+
+The Barman Cloud CNPG-I plugin archives WAL and scheduled physical backups to
+the existing OCI Object Storage bucket under
+`cnpg/keycloak-postgres/`. Credentials are synchronized from OCI Vault by
+External Secrets, and the ObjectStore retention policy is 30 days. The tools
+worker pool has three nodes so the three database instances can be spread
+across nodes.
+
+Verify the database foundation with:
+
+```sh
+export KUBECONFIG="$PWD/terraform/.kube.tools.config"
+kubectl get nodes -L kubernetes.io/hostname
+kubectl -n keycloak get cluster,pods,pvc,secret keycloak-postgres keycloak-postgres-app
+kubectl -n keycloak get objectstore,scheduledbackup
+kubectl -n cnpg-system get helmrelease plugin-barman-cloud
+```
+
+Trigger and inspect an on-demand backup with a `Backup` resource using
+`method: plugin` and plugin name `barman-cloud.cloudnative-pg.io`; confirm
+objects appear below the `cnpg/keycloak-postgres/` prefix before using the
+database for Keycloak. Restore testing remains a separate change.
 
 ## Keycloak Operator
 
@@ -196,8 +218,9 @@ operator is installed in `OwnNamespace` mode and does not watch staging or
 production. The current approved CSV is Keycloak Operator `26.7.0`.
 
 This rollout installs OLM, the OperatorHub catalog, the Keycloak Operator, and
-its CRDs only. It does not create a Keycloak server, realm, database, route,
-TLS certificate, or admin credential.
+its CRDs. It does not create a Keycloak server, realm, route, TLS certificate,
+or admin credential. The separate CNPG manifest creates only the PostgreSQL
+database foundation described above.
 
 Verify it in tools with:
 

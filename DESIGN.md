@@ -126,11 +126,18 @@ optional core profile and requires its own secrets, storage, and routes.
 
 CloudNativePG is installed in all three clusters as an operator-only baseline.
 The Flux roots point to the shared `gitops/core/cloudnative-pg` manifests,
-which install chart `0.29.0` and operator `1.30.0` in `cnpg-system`. No
-PostgreSQL `Cluster` object is included yet. Future database manifests must
-select `oci-bv` or `longhorn` explicitly and define backup/WAL retention,
-credentials, network access, and replica placement as part of the workload
-design.
+which install chart `0.29.0` and operator `1.30.0` in `cnpg-system`. The tools
+cluster additionally deploys `keycloak-postgres`: three CNPG instances with
+100 GiB PVCs using the native `oci-bv` OCI Block Volume CSI StorageClass. The
+cluster initializes the `keycloak` database and owner, and CNPG generates the
+`keycloak-postgres-app` Secret for a future Keycloak resource.
+
+Tools also installs the Barman Cloud CNPG-I plugin and an ObjectStore backed by
+the existing OCI Object Storage bucket, using the dedicated prefix
+`cnpg/keycloak-postgres/`, Vault-sourced credentials, WAL archiving, and a
+30-day retention policy. Staging and production remain operator-only. A
+Keycloak server, restore test, ingress, and admin secret are intentionally not
+part of this database foundation.
 
 The tools cluster also installs OLM `v0.45.0` and the Keycloak Operator through
 the OperatorHub catalog. The Subscription uses the `fast` channel with manual

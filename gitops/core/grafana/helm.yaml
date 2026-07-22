@@ -72,6 +72,8 @@ spec:
         searchNamespace: grafana
         label: grafana_dashboard
         folderAnnotation: grafana_folder
+        provider:
+          foldersFromFilesStructure: true
       datasources:
         enabled: true
         searchNamespace: grafana

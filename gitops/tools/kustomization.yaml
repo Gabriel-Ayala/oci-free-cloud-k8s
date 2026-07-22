@@ -6,6 +6,7 @@ resources:
   - olm.yaml
   - keycloak-operator.yaml
   - cloudnative-pg.yaml
+  - keycloak-postgres-plugin.yaml
   - keycloak-postgres.yaml
   - external-secrets.yaml
   - cert-manager.yaml

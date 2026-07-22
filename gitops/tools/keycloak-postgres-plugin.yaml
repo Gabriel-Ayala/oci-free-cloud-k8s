@@ -1,18 +1,15 @@
 apiVersion: kustomize.toolkit.fluxcd.io/v1
 kind: Kustomization
 metadata:
-  name: keycloak-postgres
+  name: keycloak-postgres-plugin
   namespace: flux-system
 spec:
   interval: 10m
-  path: ./gitops/core/keycloak-postgres
+  path: ./gitops/core/keycloak-postgres/plugin
   prune: true
   dependsOn:
     - name: cloudnative-pg
-    - name: external-secrets
     - name: cert-manager
-    - name: keycloak-operator
-    - name: keycloak-postgres-plugin
   sourceRef:
     kind: GitRepository
     name: flux-system

@@ -72,4 +72,5 @@ data:
     limits:
       ingestion_rate: 100000
       ingestion_burst_size: 200000
+      max_global_series_per_user: 500000
       compactor_blocks_retention_period: 30d

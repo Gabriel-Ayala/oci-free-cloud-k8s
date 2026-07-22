@@ -328,8 +328,9 @@ kubectl get httproute -A
 The tools, staging, and production roots each install Longhorn from
 `gitops/core/longhorn`. The deployment uses chart version `1.11.1`, the V1
 data engine, two replicas per volume, and the default disk at
-`/var/lib/longhorn` on each worker. It creates the default `longhorn`
-StorageClass and exposes the UI through a cluster-specific route:
+`/var/lib/longhorn` on each worker. It creates the `longhorn` StorageClass for
+explicit selection. OKE's native `oci-bv` StorageClass remains the default
+class in each cluster. Longhorn exposes the UI through a cluster-specific route:
 `storage-tools.hackyard.dev`, `storage-staging.hackyard.dev`, or
 `storage-production.hackyard.dev`. The tools DNS record is outside the minimal
 tools ExternalDNS profile; staging and production manage their records through
@@ -352,6 +353,32 @@ each volume became healthy and mounted successfully, and the tools test also
 retained a marker after Pod recreation. The default disk is the worker boot
 volume, so dedicated OCI Block Volumes, capacity planning, backups, and
 recovery testing are required before production data is entrusted to Longhorn.
+
+#### OCI Block Volume CSI option
+
+OKE supplies and manages the Oracle Block Volume CSI driver in all three
+clusters. The `oci-bv` StorageClass uses the
+`blockvolume.csi.oraclecloud.com` provisioner, has
+`WaitForFirstConsumer` binding, supports `ReadWriteOnce`, and permits
+expansion. It dynamically creates and attaches OCI Block Volumes without
+requiring a separate GitOps controller or StorageClass manifest. Select it
+explicitly in a PVC with `storageClassName: oci-bv`.
+
+This is the recommended second storage path for single-node stateful workloads
+that need OCI-native volume operations, snapshots, or Block Volume backups.
+It is not a replacement for Longhorn replication and does not provide RWX.
+Use OCI File Storage CSI for shared filesystem semantics. Verify the OKE
+installation with:
+
+```sh
+kubectl get storageclass oci-bv
+kubectl -n kube-system get daemonset csi-oci-node
+```
+
+The tools cluster was validated with a temporary 50 GiB PVC and Pod: the
+volume bound, mounted, accepted a marker write, and was removed with the test
+namespace. The same OKE-managed class and CSI node plugin are present in
+staging and production.
 
 #### OCI Object Storage backup plan
 

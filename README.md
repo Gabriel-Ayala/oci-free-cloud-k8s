@@ -244,8 +244,9 @@ contour-envoy` when validating the resulting Cloudflare record.
 Longhorn is deployed in the `longhorn` namespace in tools, staging, and
 production. The HelmRelease uses Longhorn `1.11.1`, the V1 data engine, two
 replicas per volume, and the node path `/var/lib/longhorn`. Its `longhorn`
-StorageClass is the default class in each cluster. Each cluster has a distinct
-HTTPS route for the Longhorn UI:
+StorageClass is available explicitly in each cluster. OKE's native `oci-bv`
+StorageClass is the cluster default; use it when OCI-managed block storage is
+preferred. Each cluster has a distinct HTTPS route for the Longhorn UI:
 
 ```text
 tools      -> https://storage-tools.hackyard.dev
@@ -279,9 +280,54 @@ kubectl -n longhorn get engineimages.longhorn.io -o wide
 For a smoke test, create a temporary PVC and Pod using
 `storageClassName: longhorn`, write a marker to the mounted volume, recreate
 the Pod, and verify the marker remains. Remove the temporary namespace after
-the test. Do not use the boot-disk-backed default for production workloads
-until capacity, replication, backup, and failure-recovery procedures are
-reviewed.
+the test. Do not use the boot-disk-backed Longhorn disk for production
+workloads until capacity, replication, backup, and failure-recovery procedures
+are reviewed.
+
+### OCI Block Volume CSI
+
+OKE also deploys Oracle's native Block Volume CSI driver in all three
+clusters. The OKE-managed `oci-bv` StorageClass uses the
+`blockvolume.csi.oraclecloud.com` provisioner, waits until a Pod is scheduled,
+supports `ReadWriteOnce`, and allows online expansion. It is currently the
+default StorageClass; this class is created and maintained by OKE, so it is
+not duplicated in GitOps.
+
+Use it explicitly for workloads that should use OCI Block Volume instead of
+Longhorn:
+
+```yaml
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: app-data
+spec:
+  storageClassName: oci-bv
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 50Gi
+```
+
+OCI Block Volume is a good fit for stateful workloads that need native OCI
+attach/detach, volume expansion, and OCI Block Volume snapshots/backups. It
+does not provide Longhorn's replica layer, and a volume is normally attached
+to one node at a time. Use Longhorn when Kubernetes-level replication or
+Longhorn backup workflows are required. For shared `ReadWriteMany` storage,
+evaluate OCI File Storage CSI separately; `oci-bv` is not an RWX solution.
+
+Verify the native driver and class with:
+
+```sh
+kubectl get storageclass oci-bv
+kubectl -n kube-system get daemonset csi-oci-node
+```
+
+The tools cluster was smoke-tested with a temporary 50 GiB PVC and Pod. The
+PVC bound through `oci-bv`, the Pod mounted the volume and wrote a marker, and
+the namespace deletion removed the test resources. Production use still
+requires a reviewed OCI Block Volume backup, retention, and restore procedure.
 
 ### Longhorn backup plan with OCI services
 

@@ -90,11 +90,12 @@ workloads share the compartment.
 
 Longhorn is deployed in all three clusters with its V1 data engine, two
 replicas per volume, and `/var/lib/longhorn` as the default disk. The
-`longhorn` StorageClass is default in each cluster. The node bootstrap enables
-the required iSCSI service and installs the NFS/cryptsetup/device-mapper
-packages. The current disk is the worker boot volume; production requires a
-dedicated storage-disk design and backup/recovery runbook before using it for
-important data. Each cluster exposes the UI through its own route:
+`longhorn` StorageClass is available explicitly in each cluster; OKE's native
+`oci-bv` StorageClass is the cluster default. The node bootstrap enables the
+required iSCSI service and installs the NFS/cryptsetup/device-mapper packages.
+The current disk is the worker boot volume; production requires a dedicated
+storage-disk design and backup/recovery runbook before using it for important
+data. Each cluster exposes the UI through its own route:
 `storage-tools.hackyard.dev`, `storage-staging.hackyard.dev`, or
 `storage-production.hackyard.dev`. This administrative surface must be
 protected before general use.
@@ -107,6 +108,16 @@ External Secrets. Each cluster uses a separate bucket prefix and a daily
 default-group backup with seven retained backups and a periodic full backup.
 Object Storage lifecycle deletion is intentionally not enabled until storage
 growth and recovery requirements are reviewed.
+
+OKE also provides the Oracle Block Volume CSI driver in every cluster. The
+OKE-managed `oci-bv` StorageClass uses `blockvolume.csi.oraclecloud.com`,
+provisions OCI Block Volumes with `ReadWriteOnce`, waits for Pod scheduling,
+and supports expansion. It is the preferred class when native OCI volume
+lifecycle, OCI snapshots, and OCI Block Volume backups are more important than
+Longhorn replication. It is not managed by GitOps because OKE owns the class.
+Workloads select it with `storageClassName: oci-bv`; workloads that need
+Longhorn select `storageClassName: longhorn`. OCI File Storage CSI should be
+evaluated separately for `ReadWriteMany` requirements.
 
 The deployed tools baseline includes standalone Grafana with the OCI Metrics
 datasource plugin, local basic authentication, no persistent volume, and a

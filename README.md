@@ -316,13 +316,19 @@ export KUBECONFIG="$PWD/terraform/.kube.tools.config"
 kubectl -n longhorn get externalsecret longhorn-backup-credentials
 kubectl -n longhorn get secret longhorn-backup-credentials
 kubectl -n longhorn get recurringjob daily-object-storage-backup
-kubectl -n longhorn get settings.longhorn.io backup-target
+kubectl -n longhorn get backuptarget default
 ```
 
 Before production use, create a test PVC, run a manual backup, restore it as a
 new volume, and verify application data. Object Storage backups protect
 Longhorn volume data; they do not replace application-consistent database
 dumps or an OCI Block Volume backup strategy for unrelated compute disks.
+
+The tools rollout was smoke-tested with a temporary 1 GiB PVC: data was
+written, a Longhorn backup reached `Completed`, and OCI Object Storage listed
+the resulting objects under the `tools/` prefix. The temporary workload was
+removed after the test; the successful backup remains in the bucket as a
+recovery artifact.
 
 ## External Secrets and OCI Vault
 

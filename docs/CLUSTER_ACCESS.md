@@ -25,17 +25,42 @@ kubectl oidc-login setup \
   --oidc-client-id=kubernetes
 ```
 
-Then use the generated kubeconfig context:
+The Terraform-generated kubeconfigs initially use OCI IAM. Configure their
+current contexts to use the OIDC credential plugin:
 
 ```sh
+source ~/.zshrc
+
 export KUBECONFIG="$PWD/terraform/.kube.staging.config"
+kubectl config set-credentials oidc-keycloak \
+  --exec-api-version=client.authentication.k8s.io/v1 \
+  --exec-command=kubectl \
+  --exec-arg=oidc-login \
+  --exec-arg=get-token \
+  --exec-arg=--oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --exec-arg=--oidc-client-id=kubernetes \
+  --exec-interactive-mode=Never
+kubectl config set-context "$(kubectl config current-context)" --user=oidc-keycloak
 kubectl get nodes
 kubectl get pods -A
 
 export KUBECONFIG="$PWD/terraform/.kube.production.config"
+kubectl config set-credentials oidc-keycloak \
+  --exec-api-version=client.authentication.k8s.io/v1 \
+  --exec-command=kubectl \
+  --exec-arg=oidc-login \
+  --exec-arg=get-token \
+  --exec-arg=--oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --exec-arg=--oidc-client-id=kubernetes \
+  --exec-interactive-mode=Never
+kubectl config set-context "$(kubectl config current-context)" --user=oidc-keycloak
 kubectl get nodes
 kubectl get pods -A
 ```
+
+Terraform regenerates these files when the cluster is applied, so repeat the
+credential and context commands after a kubeconfig refresh. Do not change the
+tools kubeconfig; tools is still a Basic cluster and uses OCI IAM.
 
 The current tools cluster is `BASIC_CLUSTER`, so native OIDC is not enabled
 there. Use OCI IAM until tools is migrated or recreated as an Enhanced

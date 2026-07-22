@@ -77,10 +77,17 @@ kubectl get externalsecret,secret -n monitoring
 The monitoring Kustomization waits for External Secrets and Longhorn. Grafana
 waits for monitoring so its Mimir datasource is available when it starts.
 
-The Grafana dashboard sidecar imports `Kubernetes Fleet Overview`, `Kubernetes
-Cluster Resources`, `Platform Operations`, and `Mimir and Prometheus Health`
-from repository ConfigMaps. The cluster selector is available on the cluster
-and operations dashboards.
+The Grafana dashboard sidecar imports dashboards organized by product:
+
+- `gitops/tools/grafana/dashboards/kubernetes/`: fleet overview and cluster
+  resources.
+- `gitops/tools/grafana/dashboards/mimir/`: Mimir and Prometheus health.
+- `gitops/tools/grafana/dashboards/platform/`: platform operations.
+- `gitops/core/grafana/dashboards/fluxcd/`: Flux control-plane and cluster
+  dashboards.
+- `gitops/core/grafana/dashboards/bkw/`: BKW product dashboards.
+
+The cluster selector is available on the cluster and operations dashboards.
 
 ## Smoke tests
 

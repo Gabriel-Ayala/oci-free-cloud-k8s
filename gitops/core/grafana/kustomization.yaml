@@ -9,8 +9,8 @@ resources:
 configMapGenerator:
   - name: flux-grafana-dashboards
     files:
-      - dashboards/fluxcd-control-plane.json
-      - dashboards/fluxcd-cluster.json
+      - dashboards/fluxcd/fluxcd-control-plane.json
+      - dashboards/fluxcd/fluxcd-cluster.json
     options:
       labels:
         grafana_dashboard: "1"
@@ -18,7 +18,7 @@ configMapGenerator:
         kustomize.toolkit.fluxcd.io/substitute: disabled
   - name: bkw-grafana-dashboards
     files:
-      - dashboards/bkw.json
+      - dashboards/bkw/bkw.json
     options:
       labels:
         grafana_dashboard: "1"

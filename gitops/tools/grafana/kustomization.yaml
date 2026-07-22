@@ -9,10 +9,10 @@ resources:
 configMapGenerator:
   - name: observability-dashboards
     files:
-      - dashboards/fleet-overview.json
-      - dashboards/cluster-resources.json
-      - dashboards/platform-operations.json
-      - dashboards/mimir-prometheus.json
+      - dashboards/kubernetes/fleet-overview.json
+      - dashboards/kubernetes/cluster-resources.json
+      - dashboards/platform/platform-operations.json
+      - dashboards/mimir/mimir-prometheus.json
     options:
       labels:
         grafana_dashboard: "1"

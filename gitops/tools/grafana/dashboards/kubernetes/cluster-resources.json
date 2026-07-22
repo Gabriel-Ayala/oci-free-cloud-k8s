@@ -3,15 +3,15 @@
   "editable":true,
   "graphTooltip":1,
   "panels":[
-    {"type":"timeseries","title":"Node CPU","gridPos":{"h":8,"w":12,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(node_cpu_seconds_total{cluster=\"$cluster\",mode!=\"idle\"}[5m])) by (instance)","legendFormat":"{{instance}}","refId":"A"}]},
-    {"type":"timeseries","title":"Node memory utilization","gridPos":{"h":8,"w":12,"x":12,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"100 * (1 - node_memory_MemAvailable_bytes{cluster=\"$cluster\"} / node_memory_MemTotal_bytes{cluster=\"$cluster\"})","legendFormat":"{{instance}}","refId":"A"}]},
-    {"type":"timeseries","title":"Pod restarts","gridPos":{"h":8,"w":12,"x":0,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(increase(kube_pod_container_status_restarts_total{cluster=\"$cluster\"}[1h])) by (namespace)","legendFormat":"{{namespace}}","refId":"A"}]},
-    {"type":"timeseries","title":"PVC usage","gridPos":{"h":8,"w":12,"x":12,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"100 * kubelet_volume_stats_used_bytes{cluster=\"$cluster\"} / kubelet_volume_stats_capacity_bytes{cluster=\"$cluster\"}","legendFormat":"{{namespace}}/{{persistentvolumeclaim}}","refId":"A"}]}
+    {"type":"timeseries","title":"Node CPU","gridPos":{"h":8,"w":12,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(rate(node_cpu_seconds_total{environment=~\"$environment\",cluster=~\"$cluster\",mode!=\"idle\"}[5m])) by (instance)","legendFormat":"{{instance}}","refId":"A"}]},
+    {"type":"timeseries","title":"Node memory utilization","gridPos":{"h":8,"w":12,"x":12,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"100 * (1 - node_memory_MemAvailable_bytes{environment=~\"$environment\",cluster=~\"$cluster\"} / node_memory_MemTotal_bytes{environment=~\"$environment\",cluster=~\"$cluster\"})","legendFormat":"{{instance}}","refId":"A"}]},
+    {"type":"timeseries","title":"Pod restarts","gridPos":{"h":8,"w":12,"x":0,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum(increase(kube_pod_container_status_restarts_total{environment=~\"$environment\",cluster=~\"$cluster\"}[1h])) by (namespace)","legendFormat":"{{namespace}}","refId":"A"}]},
+    {"type":"timeseries","title":"PVC usage","gridPos":{"h":8,"w":12,"x":12,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"100 * kubelet_volume_stats_used_bytes{environment=~\"$environment\",cluster=~\"$cluster\"} / kubelet_volume_stats_capacity_bytes{environment=~\"$environment\",cluster=~\"$cluster\"}","legendFormat":"{{namespace}}/{{persistentvolumeclaim}}","refId":"A"}]}
   ],
   "refresh":"30s",
   "schemaVersion":39,
   "tags":["kubernetes","resources"],
-  "templating":{"list":[{"name":"cluster","label":"Cluster","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(up, cluster)","includeAll":false,"multi":false,"refresh":1,"current":{}}]},
+  "templating":{"list":[{"name":"environment","label":"Environment","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(up, environment)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},{"name":"cluster","label":"Cluster","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(up{environment=~\"$environment\"}, cluster)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}}]},
   "time":{"from":"now-6h","to":"now"},
   "title":"Kubernetes Cluster Resources",
   "uid":"k8s-cluster-resources",

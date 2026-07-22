@@ -1,0 +1,14 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: keycloak-operator
+  namespace: flux-system
+spec:
+  interval: 10m
+  path: ./gitops/core/keycloak-operator
+  prune: true
+  dependsOn:
+    - name: olm
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

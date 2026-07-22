@@ -95,6 +95,10 @@ curl -fsS http://127.0.0.1:9090/api/v1/status/runtimeinfo
 Then sign in to <https://grafana-inova.hackyard.dev>, open Explore, select
 `Mimir`, and query `up` or `kube_node_info`.
 
+Grafana's Generic OAuth configuration must set both `allowed_groups` and
+`groups_attribute_path = groups`; without the attribute path Grafana cannot
+evaluate the Keycloak group claim and rejects otherwise valid users.
+
 ## Troubleshooting
 
 ```sh

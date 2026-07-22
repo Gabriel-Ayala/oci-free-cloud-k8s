@@ -134,6 +134,9 @@ integration. Only `platform-admins` and `grafana-viewers` can sign in.
 receive Viewer access. Its Keycloak callback is
 `https://grafana-inova.hackyard.dev/login/generic_oauth`. The first successful
 Keycloak login provisions the Grafana account automatically.
+Grafana reads the Keycloak `groups` claim through
+`groups_attribute_path = groups`; this is required when `allowed_groups` is
+used.
 
 ## Secrets and troubleshooting
 

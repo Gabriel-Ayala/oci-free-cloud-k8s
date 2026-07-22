@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: flux-system
 resources:
   - metrics-server.yaml
+  - cloudnative-pg.yaml
   - external-secrets.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml

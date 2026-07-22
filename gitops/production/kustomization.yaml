@@ -3,6 +3,7 @@ kind: Kustomization
 namespace: flux-system
 resources:
   - metrics-server.yaml
+  - cloudnative-pg.yaml
   - external-secrets.yaml
   - external-dns.yaml
   - longhorn.yaml

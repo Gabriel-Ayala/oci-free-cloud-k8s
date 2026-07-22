@@ -10,8 +10,9 @@ https://keycloak-inova.hackyard.dev/realms/platform
 ```
 
 The Kubernetes OIDC client is `kubernetes`. Keycloak emits the
-`preferred_username` and `groups` claims. OKE prefixes both values with `oidc:`
-before Kubernetes RBAC evaluates them.
+`preferred_username` and `groups` claims through the configured group-membership
+protocol mapper. The same `groups` claim is used by OAuth2 Proxy for Longhorn.
+OKE prefixes both Kubernetes values with `oidc:` before RBAC evaluates them.
 
 ## Kubernetes API access
 

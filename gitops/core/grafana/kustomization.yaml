@@ -27,3 +27,5 @@ configMapGenerator:
       labels:
         grafana_dashboard: "1"
         kustomize.toolkit.fluxcd.io/substitute: disabled
+generatorOptions:
+  disableNameSuffixHash: true

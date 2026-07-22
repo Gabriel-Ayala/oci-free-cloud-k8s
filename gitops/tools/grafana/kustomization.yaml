@@ -18,6 +18,8 @@ configMapGenerator:
         grafana_dashboard: "1"
         app.kubernetes.io/part-of: observability
         kustomize.toolkit.fluxcd.io/substitute: disabled
+generatorOptions:
+  disableNameSuffixHash: true
   - name: mimir-dashboards
     files:
       - dashboards/mimir/mimir-prometheus.json

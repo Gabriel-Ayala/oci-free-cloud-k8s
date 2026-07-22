@@ -1,0 +1,23 @@
+{
+  "annotations":{"list":[]},
+  "editable":true,
+  "graphTooltip":1,
+  "panels":[
+    {"type":"timeseries","title":"CPU usage by pod","gridPos":{"h":8,"w":12,"x":0,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum by (namespace,pod) (rate(container_cpu_usage_seconds_total{environment=~\"$environment\",cluster=~\"$cluster\",node=~\"$node\",container!=\"\",container!=\"POD\",image!=\"\"}[5m]))","legendFormat":"{{namespace}}/{{pod}}","refId":"A"}]},
+    {"type":"timeseries","title":"Memory usage by pod","gridPos":{"h":8,"w":12,"x":12,"y":0},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum by (namespace,pod) (container_memory_working_set_bytes{environment=~\"$environment\",cluster=~\"$cluster\",node=~\"$node\",container!=\"\",container!=\"POD\",image!=\"\"})","legendFormat":"{{namespace}}/{{pod}}","refId":"A"}]},
+    {"type":"table","title":"CPU requests by pod","gridPos":{"h":8,"w":12,"x":0,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum by (namespace,pod) (kube_pod_container_resource_requests{environment=~\"$environment\",cluster=~\"$cluster\",node=~\"$node\",resource=\"cpu\",unit=\"core\"})","format":"table","instant":true,"refId":"A"}]},
+    {"type":"table","title":"Memory requests by pod","gridPos":{"h":8,"w":12,"x":12,"y":8},"datasource":{"type":"prometheus","uid":"mimir"},"targets":[{"expr":"sum by (namespace,pod) (kube_pod_container_resource_requests{environment=~\"$environment\",cluster=~\"$cluster\",node=~\"$node\",resource=\"memory\",unit=\"byte\"})","format":"table","instant":true,"refId":"A"}]}
+  ],
+  "refresh":"30s",
+  "schemaVersion":39,
+  "tags":["kubernetes","fleet","mimir"],
+  "templating":{"list":[
+    {"name":"environment","label":"Environment","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_node_info, environment)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"cluster","label":"Cluster","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_node_info{environment=~\"$environment\"}, cluster)","includeAll":true,"multi":false,"refresh":1,"current":{"text":"All","value":["$__all"]}},
+    {"name":"node","label":"Node","type":"query","datasource":{"type":"prometheus","uid":"mimir"},"query":"label_values(kube_node_info{environment=~\"$environment\",cluster=~\"$cluster\"}, node)","includeAll":true,"multi":true,"refresh":1,"current":{"text":"All","value":["$__all"]}}
+  ]},
+  "time":{"from":"now-1h","to":"now"},
+  "title":"Kubernetes Node Pods (Fleet)",
+  "uid":"k8s-node-pods-fleet",
+  "version":1
+}

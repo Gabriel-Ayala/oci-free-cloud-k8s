@@ -4,8 +4,6 @@ namespace: monitoring
 resources:
   - namespace.yaml
   - helm.yaml
-  - secret.yaml
-  - httproute.yaml
 commonLabels:
   app.kubernetes.io/component: monitoring
 configMapGenerator:

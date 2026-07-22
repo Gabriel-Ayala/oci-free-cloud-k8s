@@ -66,3 +66,18 @@ spec:
         readOnly: true
     plugins:
       - oci-metrics-datasource
+    datasources:
+      datasources.yaml:
+        apiVersion: 1
+        datasources:
+          - name: Mimir
+            uid: mimir
+            type: prometheus
+            access: proxy
+            url: http://mimir.monitoring.svc.cluster.local:8080/prometheus
+            isDefault: true
+          - name: Prometheus
+            uid: prometheus
+            type: prometheus
+            access: proxy
+            url: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090

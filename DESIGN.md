@@ -119,10 +119,13 @@ Workloads select it with `storageClassName: oci-bv`; workloads that need
 Longhorn select `storageClassName: longhorn`. OCI File Storage CSI should be
 evaluated separately for `ReadWriteMany` requirements.
 
-The deployed tools baseline includes standalone Grafana with the OCI Metrics
-datasource plugin, local basic authentication, no persistent volume, and a
-Contour route. The full Prometheus/Alertmanager stack is present only in the
-optional core profile and requires its own secrets, storage, and routes.
+The deployed tools baseline includes Grafana with the OCI Metrics datasource
+plugin, direct Keycloak authentication, and a Contour route. It also runs
+kube-prometheus-stack and a single-process Mimir deployment. Prometheus keeps a
+short local retention window and remote-writes to Mimir, which Grafana uses as
+its default Prometheus-compatible datasource. Mimir uses a 15 GiB Longhorn
+volume with filesystem storage for this small-cluster profile; it must move to
+OCI Object Storage and multiple replicas before production-scale use.
 
 CloudNativePG is installed in all three clusters as an operator-only baseline.
 The Flux roots point to the shared `gitops/core/cloudnative-pg` manifests,

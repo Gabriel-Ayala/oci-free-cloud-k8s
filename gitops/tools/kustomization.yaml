@@ -17,4 +17,5 @@ resources:
   - longhorn.yaml
   - longhorn-route.yaml
   - longhorn-auth.yaml
+  - monitoring/flux.yaml
   - grafana/flux.yaml

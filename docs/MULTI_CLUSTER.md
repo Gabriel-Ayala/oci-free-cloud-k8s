@@ -246,15 +246,15 @@ staging    -> gitops/staging
 production -> gitops/production
 ```
 
-The tools root includes the shared metrics and External Secrets resources plus
-a standalone Grafana deployment under `gitops/tools/grafana`. Grafana uses a
-ClusterIP service and an admin password synchronized from the OCI Vault secret
-`grafana-tools-admin-password`; the password is not stored in Git.
+The tools root includes the shared metrics and External Secrets resources,
+kube-prometheus-stack, single-process Mimir, and a Grafana deployment under
+`gitops/tools/grafana`. Grafana uses a ClusterIP service and an admin password
+synchronized from the OCI Vault secret `grafana-tools-admin-password`; the
+password is not stored in Git.
 
-The tools Grafana currently uses local basic authentication and the OCI Metrics
-datasource plugin. It is exposed through the tools Contour Gateway at
-`https://grafana-inova.hackyard.dev` and does not include the full
-Prometheus/Alertmanager stack.
+The tools Grafana uses direct Keycloak OAuth, the OCI Metrics datasource plugin,
+and Mimir as its default Prometheus-compatible datasource. It is exposed
+through the tools Contour Gateway at `https://grafana-inova.hackyard.dev`.
 
 To access it locally:
 
@@ -567,8 +567,10 @@ done
 - Local state is suitable for a personal deployment but not ideal for team
   operations. Move each stack to a locked remote backend before collaboration.
 - The `tools` minimal profile installs Flux, metrics-server, External Secrets,
-  Contour, and standalone Grafana; the full observability stack still requires its
-  Prometheus/Alertmanager secrets, domains, persistence, and integrations.
+  Contour, Grafana, kube-prometheus-stack, and single-process Mimir. Mimir is
+  intentionally single-node with filesystem storage; HA and OCI Object Storage
+  are follow-up work before production-scale metrics retention. See
+  `docs/MONITORING.md` for the operating guide.
 - The current network model allows private VCN routing but does not configure
   cross-cluster service discovery.
 - Public OKE API endpoints and public load-balancer subnets should be reviewed

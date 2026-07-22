@@ -35,11 +35,13 @@ spec:
         enabled: false
       prometheusSpec:
         enableRemoteWriteReceiver: true
+        remoteWrite:
+          - url: http://mimir.monitoring.svc.cluster.local:8080/api/v1/push
         podMonitorNamespaceSelector: {}
         podMonitorSelector:
           matchLabels:
             app.kubernetes.io/component: monitoring
-        retention: ""
+        retention: 3d
         retentionSize: 14GB
         storageSpec:
           volumeClaimTemplate:
@@ -84,15 +86,7 @@ spec:
       namespaceOverride: grafana
       forceDeployDatasources: true
     alertmanager:
-      alertmanagerSpec:
-        volumes:
-          - name: slack-webhook
-            secret:
-              secretName: alertmanager-slack-webhook
-        volumeMounts:
-          - name: slack-webhook
-            mountPath: /etc/slack-webhook
-            readOnly: true
+      alertmanagerSpec: {}
       config:
         inhibit_rules:
           - source_matchers:
@@ -113,18 +107,3 @@ spec:
                 - alertname =~ "InfoInhibitor|Watchdog"
         receivers:
           - name: "null"
-          - name: "slack"
-            slack_configs:
-              - send_resolved: true
-                channel: "#monitoring"
-                username: alertmanager
-                api_url_file: /etc/slack-webhook/url
-                title: ":rotating_light: *{{ .CommonLabels.alertname }}:* {{ .CommonAnnotations.summary }}"
-                icon_emoji: ":fire:"
-                text: |
-                  *Status:* {{ .Status }}
-                  *Severity:* {{ .CommonLabels.severity }}
-                  *Instance:* {{ .CommonLabels.pod }}
-                  *Summary:* {{ .CommonAnnotations.summary }}
-                  *Description:* {{ .CommonAnnotations.description }}
-                  [🔍 View in Grafana](https://monitoring.klangregen.de/alerting/list?search=state:firing)

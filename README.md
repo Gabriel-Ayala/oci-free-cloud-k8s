@@ -56,6 +56,7 @@ gitops/staging/                  Staging Flux root
 gitops/production/               Production Flux root
 scripts/deploy-minimal.sh        Sequential deployment helper
 docs/MULTI_CLUSTER.md            Detailed design and extraction notes
+docs/MONITORING.md               Tools monitoring stack and operations
 ```
 
 ## Requirements
@@ -151,6 +152,7 @@ shared manifests from `gitops/core` where appropriate. The tools root deploys:
 - External Secrets integration
 - cert-manager and the Cloudflare DNS01 issuer
 - Contour Gateway API ingress with an OCI LoadBalancer
+- kube-prometheus-stack and single-process Mimir metrics aggregation
 - Grafana
 
 The staging and production roots additionally deploy ExternalDNS. ExternalDNS
@@ -528,6 +530,19 @@ curl -I https://grafana-inova.hackyard.dev/
 
 The Grafana OCI IAM policy is managed by Terraform. Review and tighten the
 dynamic-group matching rule if other compute workloads share the compartment.
+
+## Monitoring in tools
+
+The tools cluster runs kube-prometheus-stack for Kubernetes metrics, recording
+rules, node exporter, kube-state-metrics, and Alertmanager. Prometheus keeps a
+short local three-day window and remote-writes samples to the single-process
+Mimir deployment in the `monitoring` namespace. Grafana has Mimir configured as
+its default Prometheus-compatible datasource.
+
+This first Mimir profile uses a 15 GiB Longhorn volume and filesystem storage,
+so it is intentionally single-node and suitable for this small tools cluster.
+It is not an HA or cross-cluster metrics store. The upgrade path is documented
+in [docs/MONITORING.md](docs/MONITORING.md).
 
 ## Validation and operations
 

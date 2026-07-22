@@ -8,6 +8,8 @@ resources:
   - external-dns.yaml
   - longhorn.yaml
   - longhorn-route.yaml
+  - longhorn-auth.yaml
+  - oidc-rbac.yaml
   - cert-manager.yaml
   - cert-manager-issuer.yaml
   - contour.yaml

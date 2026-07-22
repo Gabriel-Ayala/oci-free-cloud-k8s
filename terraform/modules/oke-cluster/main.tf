@@ -45,6 +45,21 @@ resource "oci_containerengine_cluster" "this" {
       services_cidr = var.services_cidr
     }
 
+    dynamic "open_id_connect_token_authentication_config" {
+      for_each = var.enable_oidc_auth ? [1] : []
+
+      content {
+        is_open_id_connect_auth_enabled = true
+        issuer_url                      = var.oidc_issuer_url
+        client_id                       = var.oidc_client_id
+        username_claim                  = var.oidc_username_claim
+        groups_claim                    = var.oidc_groups_claim
+        username_prefix                 = var.oidc_username_prefix
+        groups_prefix                   = var.oidc_groups_prefix
+        signing_algorithms              = ["RS256"]
+      }
+    }
+
     service_lb_subnet_ids = [var.public_subnet_id]
   }
 }

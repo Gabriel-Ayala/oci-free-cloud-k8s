@@ -24,6 +24,48 @@ variable "cluster_type" {
   }
 }
 
+variable "enable_oidc_auth" {
+  type        = bool
+  description = "Enable native OIDC authentication for the Kubernetes API"
+  default     = false
+}
+
+variable "oidc_issuer_url" {
+  type        = string
+  description = "Base HTTPS issuer URL used by the Kubernetes API OIDC authenticator"
+  default     = ""
+}
+
+variable "oidc_client_id" {
+  type        = string
+  description = "OIDC client ID accepted by the Kubernetes API"
+  default     = "kubernetes"
+}
+
+variable "oidc_username_claim" {
+  type        = string
+  description = "JWT claim used as the Kubernetes username"
+  default     = "preferred_username"
+}
+
+variable "oidc_groups_claim" {
+  type        = string
+  description = "JWT claim used as Kubernetes groups"
+  default     = "groups"
+}
+
+variable "oidc_username_prefix" {
+  type        = string
+  description = "Prefix applied to OIDC usernames"
+  default     = "oidc:"
+}
+
+variable "oidc_groups_prefix" {
+  type        = string
+  description = "Prefix applied to OIDC groups"
+  default     = "oidc:"
+}
+
 variable "region" {
   type        = string
   description = "OCI region"

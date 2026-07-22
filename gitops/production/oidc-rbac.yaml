@@ -1,0 +1,12 @@
+apiVersion: kustomize.toolkit.fluxcd.io/v1
+kind: Kustomization
+metadata:
+  name: oidc-rbac
+  namespace: flux-system
+spec:
+  interval: 1h
+  path: ./gitops/production/oidc-rbac
+  prune: true
+  sourceRef:
+    kind: GitRepository
+    name: flux-system

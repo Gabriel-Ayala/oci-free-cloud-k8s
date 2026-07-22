@@ -20,6 +20,9 @@ dependency "network" {
 inputs = {
   cluster_name            = "staging"
   cluster_type            = "ENHANCED_CLUSTER"
+  enable_oidc_auth        = true
+  oidc_issuer_url         = "https://keycloak-inova.hackyard.dev/realms/platform"
+  oidc_client_id          = "kubernetes"
   vcn_id                  = dependency.network.outputs.vcn_id
   public_subnet_id        = dependency.network.outputs.public_subnet_id
   private_subnet_id       = dependency.network.outputs.private_subnet_id

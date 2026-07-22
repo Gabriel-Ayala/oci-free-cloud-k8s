@@ -6,7 +6,7 @@ metadata:
     oci.oraclecloud.com/load-balancer-type: "nlb"
     oci.oraclecloud.com/reserved-private-ips: "${MIMIR_PRIVATE_IP_ADDRESS}"
     oci-network-load-balancer.oraclecloud.com/internal: "true"
-    service.beta.kubernetes.io/oci-load-balancer-subnet1: "${MIMIR_PRIVATE_SUBNET_ID}"
+    oci-network-load-balancer.oraclecloud.com/subnet: "${MIMIR_PRIVATE_SUBNET_ID}"
 spec:
   type: LoadBalancer
   selector:

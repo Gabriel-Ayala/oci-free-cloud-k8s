@@ -81,6 +81,7 @@ OCI IAM remains the break-glass access method for every cluster.
 | `platform-viewers` | cluster-wide read-only |
 | `staging-admins` | staging administrator |
 | `production-admins` | production administrator |
+| `grafana-viewers` | Grafana Viewer access |
 
 Group membership is managed in the Keycloak `platform` realm.
 
@@ -128,8 +129,9 @@ allowed groups should receive HTTP 403.
 ## Grafana
 
 Tools Grafana uses the same Keycloak realm through its generic OAuth
-integration. `platform-admins` receive the Grafana Administrator role; other
-authenticated users receive Viewer access. Its Keycloak callback is
+integration. Only `platform-admins` and `grafana-viewers` can sign in.
+`platform-admins` receive the Grafana Administrator role; `grafana-viewers`
+receive Viewer access. Its Keycloak callback is
 `https://grafana-inova.hackyard.dev/login/generic_oauth`. The first successful
 Keycloak login provisions the Grafana account automatically.
 

@@ -84,6 +84,10 @@ OCI IAM remains the break-glass access method for every cluster.
 
 Group membership is managed in the Keycloak `platform` realm.
 
+Longhorn OAuth2 Proxy requires the Keycloak user email to be marked as
+verified. New users must have a verified email before they can complete the
+Longhorn login flow.
+
 After changing group membership, clear the local OIDC token cache and log in
 again so the new `groups` claim is issued:
 

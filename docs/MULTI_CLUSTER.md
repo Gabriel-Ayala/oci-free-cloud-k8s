@@ -309,7 +309,9 @@ existing OCI Object Storage bucket at
 from OCI Vault through External Secrets, and the ObjectStore retention policy
 is 30 days. This is deployed only in tools; staging and production retain the
 operator-only CNPG baseline. A restore test and the eventual Keycloak server
-resource are intentionally separate changes.
+resource are intentionally separate changes. OCI S3 compatibility is
+configured with path-style addressing, non-chunked-compatible checksum
+settings, and bucket inspection permission for Barman's destination check.
 
 ### Keycloak Operator in tools
 

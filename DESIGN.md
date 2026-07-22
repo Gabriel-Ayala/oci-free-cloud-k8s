@@ -137,7 +137,9 @@ the existing OCI Object Storage bucket, using the dedicated prefix
 `cnpg/keycloak-postgres/`, Vault-sourced credentials, WAL archiving, and a
 30-day retention policy. Staging and production remain operator-only. A
 Keycloak server, restore test, ingress, and admin secret are intentionally not
-part of this database foundation.
+part of this database foundation. OCI S3 compatibility requires path-style
+addressing and the Barman checksum workaround; the backup IAM user is also
+allowed to inspect this specific bucket so existing-bucket checks succeed.
 
 The tools cluster also installs OLM `v0.45.0` and the Keycloak Operator through
 the OperatorHub catalog. The Subscription uses the `fast` channel with manual

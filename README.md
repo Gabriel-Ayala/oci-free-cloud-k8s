@@ -207,7 +207,12 @@ kubectl -n cnpg-system get helmrelease plugin-barman-cloud
 Trigger and inspect an on-demand backup with a `Backup` resource using
 `method: plugin` and plugin name `barman-cloud.cloudnative-pg.io`; confirm
 objects appear below the `cnpg/keycloak-postgres/` prefix before using the
-database for Keycloak. Restore testing remains a separate change.
+database for Keycloak. The OCI compatibility endpoint requires path-style S3
+addressing and rejects AWS chunked uploads, so the ObjectStore explicitly sets
+path addressing and the documented checksum environment workaround. The
+dedicated Object Storage user also has bucket inspection permission so Barman
+can verify the existing bucket without trying to recreate it. Restore testing
+remains a separate change.
 
 ## Keycloak Operator
 

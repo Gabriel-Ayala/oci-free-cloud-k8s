@@ -28,6 +28,6 @@ inputs = {
   private_subnet_id       = dependency.network.outputs.private_subnet_id
   pods_cidr               = "10.245.0.0/16"
   services_cidr           = "10.97.0.0/16"
-  kubernetes_worker_nodes = 2
+  kubernetes_worker_nodes = 3
   kubeconfig_path         = "${get_repo_root()}/terraform/.kube.staging.config"
 }

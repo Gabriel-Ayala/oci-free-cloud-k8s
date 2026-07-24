@@ -49,3 +49,9 @@ variable "vault_id" {
     error_message = "vault_id must reference an existing OCI Vault unless create_vault is enabled."
   }
 }
+
+variable "vault_key_id" {
+  type        = string
+  description = "The OCID of the KMS key used by an existing Vault"
+  default     = ""
+}

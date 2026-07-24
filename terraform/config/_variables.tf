@@ -40,6 +40,12 @@ variable "vault_id" {
   default     = ""
 }
 
+variable "vault_key_id" {
+  description = "OCID of the KMS key used by an existing OCI Vault"
+  type        = string
+  default     = ""
+}
+
 variable "create_external_secrets_vault" {
   description = "Create a software-protected OCI Vault when vault_id is empty"
   type        = bool
@@ -144,6 +150,17 @@ variable "enable_keycloak" {
   validation {
     condition     = !var.enable_keycloak || var.enable_external_secrets
     error_message = "enable_keycloak requires enable_external_secrets so the bootstrap password can be stored in OCI Vault."
+  }
+}
+
+variable "enable_mariadb" {
+  description = "Generate and store the MariaDB root password in OCI Vault"
+  type        = bool
+  default     = false
+
+  validation {
+    condition     = !var.enable_mariadb || var.enable_external_secrets
+    error_message = "enable_mariadb requires enable_external_secrets so the root password can be stored in OCI Vault."
   }
 }
 

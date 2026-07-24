@@ -1,0 +1,60 @@
+apiVersion: helm.toolkit.fluxcd.io/v2
+kind: HelmRelease
+metadata:
+  name: mariadb-cluster
+  namespace: mariadb
+spec:
+  interval: 30m
+  timeout: 20m
+  dependsOn:
+    - name: mariadb-operator
+      namespace: mariadb-operator
+  chart:
+    spec:
+      chart: mariadb-cluster
+      version: "26.3.0"
+      sourceRef:
+        kind: HelmRepository
+        name: mariadb-operator
+        namespace: mariadb-operator
+      interval: 1h
+  releaseName: mariadb
+  values:
+    mariadb:
+      image: mirror.gcr.io/library/mariadb:11.8.5
+      rootPasswordSecretKeyRef:
+        name: mariadb-root
+        key: root-password
+        generate: false
+      storage:
+        size: 100Gi
+        storageClassName: oci-bv
+      replicas: 3
+      galera:
+        enabled: true
+      affinity:
+        antiAffinityEnabled: true
+      podDisruptionBudget:
+        maxUnavailable: 1
+    physicalBackups:
+      - name: daily
+        schedule:
+          cron: "0 2 * * *"
+          suspend: false
+          immediate: true
+        compression: gzip
+        maxRetention: 720h
+        storage:
+          s3:
+            bucket: oke-longhorn-backups
+            prefix: mariadb/unassigned
+            endpoint: gropzbh12v84.compat.objectstorage.sa-saopaulo-1.oci.customer-oci.com
+            region: sa-saopaulo-1
+            accessKeyIdSecretKeyRef:
+              name: mariadb-backup-credentials
+              key: access-key-id
+            secretAccessKeySecretKeyRef:
+              name: mariadb-backup-credentials
+              key: secret-access-key
+            tls:
+              enabled: true

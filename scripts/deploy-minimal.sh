@@ -34,8 +34,21 @@ if [[ -z "${TF_VAR_vault_id:-}" && "$cluster_name" != "tools" ]]; then
   fi
 fi
 
+if [[ -z "${TF_VAR_vault_key_id:-}" && "$cluster_name" != "tools" ]]; then
+  tools_config="$repo_root/live/oci/clusters/tools/config"
+  if [[ -d "$tools_config" ]]; then
+    TF_VAR_vault_key_id="$(terragrunt --working-dir "$tools_config" output -raw external_secrets_key_id 2>/dev/null || true)"
+    export TF_VAR_vault_key_id
+  fi
+fi
+
 if [[ "$cluster_name" != "tools" && -z "${TF_VAR_vault_id:-}" ]]; then
   echo "TF_VAR_vault_id must reference an existing OCI Vault when deploying $cluster_name." >&2
+  exit 1
+fi
+
+if [[ "$cluster_name" != "tools" && -z "${TF_VAR_vault_key_id:-}" ]]; then
+  echo "TF_VAR_vault_key_id must reference the existing OCI Vault key when deploying $cluster_name." >&2
   exit 1
 fi
 

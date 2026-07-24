@@ -1,0 +1,16 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - ../../../gitops/core/mariadb-cluster
+  - root-secret.yaml
+patches:
+  - target:
+      group: helm.toolkit.fluxcd.io
+      version: v2
+      kind: HelmRelease
+      name: mariadb-cluster
+      namespace: mariadb
+    patch: |-
+      - op: replace
+        path: /spec/values/physicalBackups/0/storage/s3/prefix
+        value: mariadb/staging

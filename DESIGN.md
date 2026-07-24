@@ -2,7 +2,8 @@
 
 This document records the implemented baseline. Detailed commands and
 extraction notes are in [`README.md`](README.md) and
-[`docs/MULTI_CLUSTER.md`](docs/MULTI_CLUSTER.md).
+[`docs/MULTI_CLUSTER.md`](docs/MULTI_CLUSTER.md). Database topology and
+connection procedures are in [`docs/DATABASE_ACCESS.md`](docs/DATABASE_ACCESS.md).
 
 ## Infrastructure
 
@@ -11,8 +12,8 @@ The repository provisions three independent OCI OKE clusters with Terragrunt:
 | Cluster | OKE type | Purpose | Workers |
 |---|---|---|---:|
 | tools | `BASIC_CLUSTER` | shared tooling, ingress, and Grafana | 2 |
-| staging | `ENHANCED_CLUSTER` | pre-production workloads | 2 |
-| production | `ENHANCED_CLUSTER` | production workloads | 2 |
+| staging | `ENHANCED_CLUSTER` | pre-production workloads | 3 |
+| production | `ENHANCED_CLUSTER` | production workloads | 3 |
 
 Each cluster has its own VCN, public subnet, private worker subnet, pod CIDR,
 and service CIDR. A shared DRG provides private VCN-to-VCN routing. The DRG
@@ -23,7 +24,7 @@ The deployment layers are intentionally separate:
 
 1. shared DRG;
 2. per-cluster network and DRG attachment;
-3. per-cluster OKE control plane and two-node pool; and
+3. per-cluster OKE control plane and three-node pool; and
 4. per-cluster Flux/Kubernetes configuration.
 
 ## GitOps
@@ -136,6 +137,8 @@ cluster additionally deploys `keycloak-postgres`: three CNPG instances with
 100 GiB PVCs using the native `oci-bv` OCI Block Volume CSI StorageClass. The
 cluster initializes the `keycloak` database and owner, and CNPG generates the
 `keycloak-postgres-app` Secret consumed by the tools Keycloak resource.
+CNPG uses required pod anti-affinity with `kubernetes.io/hostname`, so the
+three PostgreSQL instances are placed on different worker nodes in tools.
 
 Tools also installs the Barman Cloud CNPG-I plugin and an ObjectStore backed by
 the existing OCI Object Storage bucket, using the dedicated prefix
@@ -143,6 +146,22 @@ the existing OCI Object Storage bucket, using the dedicated prefix
 30-day retention policy. Staging and production remain operator-only. OCI S3 compatibility requires path-style
 addressing and the Barman checksum workaround; the backup IAM user is also
 allowed to inspect this specific bucket so existing-bucket checks succeed.
+
+Staging and production also install the community MariaDB Operator in
+`mariadb-operator`, with CRDs and operator chart `26.3.0`. The operator watches
+the whole cluster and uses cert-manager for webhook certificates. Each cluster
+contains a three-member Galera MariaDB resource in the `mariadb` namespace,
+with three 100 GiB `oci-bv` volumes, Vault-backed root credentials, and daily
+physical backups retained for 30 days in the existing Longhorn Object Storage
+bucket under `mariadb/staging` or `mariadb/production`. MariaDB enables required
+pod anti-affinity so each Galera member is scheduled onto a different worker
+node in both environments.
+
+The repository currently defines no separate `test` or `debug` cluster. Those
+environments must be added as Terragrunt and GitOps roots before they can be
+targeted by the deployment workflow. The rollout order is operator CRDs and
+operator, Vault-backed ExternalSecrets, then the environment-specific MariaDB
+HelmRelease; production is replicated only after staging validation.
 
 The tools cluster also installs OLM `v0.45.0` and the Keycloak Operator through
 the OperatorHub catalog. The Subscription uses the `fast` channel with manual

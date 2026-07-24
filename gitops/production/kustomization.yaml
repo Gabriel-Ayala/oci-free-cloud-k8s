@@ -4,6 +4,8 @@ namespace: flux-system
 resources:
   - metrics-server.yaml
   - cloudnative-pg.yaml
+  - mariadb-operator.yaml
+  - mariadb.yaml
   - external-secrets.yaml
   - external-dns.yaml
   - longhorn.yaml

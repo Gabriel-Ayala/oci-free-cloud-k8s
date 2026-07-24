@@ -6,6 +6,7 @@ module "externalsecrets" {
   cluster_id     = var.cluster_id
   cluster_name   = var.cluster_name
   create_vault   = var.create_external_secrets_vault
+  vault_key_id   = var.vault_key_id
   principal_type = var.external_secrets_principal_type
   vault_id       = var.vault_id
   region         = var.region
@@ -22,6 +23,18 @@ module "keycloak_admin" {
   compartment_id = var.compartment_id
   vault_id       = module.externalsecrets[0].vault_id
   vault_key_id   = module.externalsecrets[0].key_id
+
+  depends_on = [module.externalsecrets]
+}
+
+module "mariadb_credentials" {
+  source = "./modules/mariadb-credentials"
+  count  = var.enable_mariadb ? 1 : 0
+
+  compartment_id = var.compartment_id
+  vault_id       = module.externalsecrets[0].vault_id
+  vault_key_id   = module.externalsecrets[0].key_id
+  cluster_name   = var.cluster_name
 
   depends_on = [module.externalsecrets]
 }

@@ -6,6 +6,9 @@ packages:
   - openssh-server
   - tzdata
   - perl
+  - unattended-upgrades
+  - fail2ban
+  - iptables-persistent
 
 write_files:
   - path: /etc/systemd/system/gitlab-public-firewall.service
@@ -47,10 +50,49 @@ write_files:
       grep -q "UUID=$uuid" /etc/fstab || echo "UUID=$uuid $mountpoint ext4 defaults,noatime 0 2" >> /etc/fstab
       mountpoint -q "$mountpoint" || mount "$mountpoint"
 
+  - path: /etc/ssh/sshd_config.d/99-gitlab-hardening.conf
+    permissions: '0644'
+    content: |
+      PermitRootLogin no
+      PasswordAuthentication no
+      KbdInteractiveAuthentication no
+      MaxAuthTries 3
+      LoginGraceTime 20
+      X11Forwarding no
+      AllowAgentForwarding no
+      AllowTcpForwarding no
+      ClientAliveInterval 300
+      ClientAliveCountMax 2
+
+  - path: /var/tmp/gitlab-hardening.rb
+    permissions: '0600'
+    content: |
+      # Keep this file secret-free. OIDC credentials are installed separately.
+      gitlab_rails['omniauth_enabled'] = true
+      gitlab_rails['omniauth_allow_single_sign_on'] = ['openid_connect']
+      gitlab_rails['omniauth_block_auto_created_users'] = true
+      gitlab_rails['omniauth_allow_bypass_two_factor'] = false
+      gitlab_rails['gitlab_signup_enabled'] = false
+      gitlab_rails['rack_attack_git_basic_auth'] = {
+        'enabled' => true,
+        'ip_whitelist' => ['127.0.0.1'],
+        'maxretry' => 10,
+        'findtime' => 60,
+        'bantime' => 3600
+      }
+      gitlab_rails['nginx']['ssl_protocols'] = 'TLSv1.2 TLSv1.3'
+      gitlab_rails['nginx']['ssl_session_tickets'] = 'off'
+      gitlab_rails['nginx']['hsts_max_age'] = 31536000
+      gitlab_rails['nginx']['hsts_include_subdomains'] = false
+      gitlab_rails['nginx']['referrer_policy'] = 'strict-origin-when-cross-origin'
+
 runcmd:
   - /usr/local/sbin/prepare-gitlab-data
   - systemctl daemon-reload
   - systemctl enable --now gitlab-public-firewall.service
+  - systemctl enable --now fail2ban
+  - iptables-save > /etc/iptables/rules.v4
+  - systemctl reload ssh || systemctl restart ssh
   - mkdir -p /etc/apt/keyrings
   - curl --fail --silent --show-error --location https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
   - >-
@@ -58,4 +100,5 @@ runcmd:
     if [ -n "${gitlab_package_version}" ]; then
     EXTERNAL_URL="${external_url}" apt-get install -y gitlab-ce="${gitlab_package_version}";
     else EXTERNAL_URL="${external_url}" apt-get install -y gitlab-ce; fi'
+  - cat /var/tmp/gitlab-hardening.rb >> /etc/gitlab/gitlab.rb
   - gitlab-ctl reconfigure

@@ -57,6 +57,65 @@ The tools subnet permits TCP 22, 80, 443, and the existing OKE API port 6443.
 The VM firewall and GitLab configuration should still be reviewed after the
 first boot.
 
+## Keycloak OIDC and hardening
+
+GitLab uses the existing Keycloak `platform` realm. Create a confidential
+Keycloak client named `gitlab` with these values:
+
+| Setting | Value |
+| --- | --- |
+| Client authentication | On |
+| Standard flow | On |
+| Direct access grants | Off |
+| PKCE method | S256 |
+| Valid redirect URI | `https://gitlab.amedsaude.com.br/users/auth/openid_connect/callback` |
+| Web origin | `https://gitlab.amedsaude.com.br` |
+
+Install the client secret on the VM with root-only permissions. Do not put it
+in Terraform variables, cloud-init metadata, Git, or shell history:
+
+```sh
+ssh ubuntu@<public-ip> 'sudo install -o root -g root -m 0600 /dev/stdin /etc/gitlab/oidc-client-secret' < client-secret.txt
+```
+
+Then append the OIDC provider configuration and reconfigure GitLab:
+
+```sh
+ssh ubuntu@<public-ip> 'sudo tee -a /etc/gitlab/gitlab.rb >/dev/null' <<'EOF'
+gitlab_rails['omniauth_auto_link_user'] = ['openid_connect']
+gitlab_rails['omniauth_providers'] = [{
+  name: 'openid_connect',
+  label: 'Keycloak',
+  args: {
+    name: 'openid_connect',
+    scope: ['openid', 'profile', 'email'],
+    response_type: 'code',
+    issuer: 'https://keycloak-inova.amedsaude.com.br/realms/platform',
+    discovery: true,
+    client_auth_method: 'basic',
+    uid_field: 'sub',
+    pkce: true,
+    client_options: {
+      identifier: 'gitlab',
+      secret: File.read('/etc/gitlab/oidc-client-secret').strip,
+      redirect_uri: 'https://gitlab.amedsaude.com.br/users/auth/openid_connect/callback'
+    }
+  }
+}]
+EOF
+ssh ubuntu@<public-ip> 'sudo gitlab-ctl reconfigure'
+```
+
+New OIDC users are blocked pending administrator approval. Keep the local
+root account available until a Keycloak administrator account has successfully
+logged in. Keycloak must enforce MFA for the users or groups allowed to access
+GitLab; GitLab’s OIDC bypass for two-factor authentication is disabled.
+
+The VM baseline also disables SSH password/root login, enables Fail2ban and
+unattended security updates, restricts GitLab TLS to TLS 1.2/1.3, enables HSTS,
+disables TLS session tickets, disables public signup, and rate-limits Git HTTP
+Basic authentication attempts.
+
 ## First-boot checks
 
 ```sh

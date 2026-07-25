@@ -6,7 +6,7 @@ required by the active profiles.
 ## Identity endpoint
 
 ```text
-https://keycloak-inova.hackyard.dev/realms/platform
+https://keycloak-inova.amedsaude.com.br/realms/platform
 ```
 
 The Kubernetes OIDC client is `kubernetes`. Keycloak emits the
@@ -21,7 +21,7 @@ Staging and production use native OKE OIDC. Install the
 
 ```sh
 kubectl oidc-login setup \
-  --oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --oidc-issuer-url=https://keycloak-inova.amedsaude.com.br/realms/platform \
   --oidc-client-id=kubernetes
 ```
 
@@ -37,7 +37,7 @@ kubectl config set-credentials oidc-keycloak \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
-  --exec-arg=--oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --exec-arg=--oidc-issuer-url=https://keycloak-inova.amedsaude.com.br/realms/platform \
   --exec-arg=--oidc-client-id=kubernetes \
   --exec-interactive-mode=Never
 kubectl config set-context "$(kubectl config current-context)" --user=oidc-keycloak
@@ -50,7 +50,7 @@ kubectl config set-credentials oidc-keycloak \
   --exec-command=kubectl \
   --exec-arg=oidc-login \
   --exec-arg=get-token \
-  --exec-arg=--oidc-issuer-url=https://keycloak-inova.hackyard.dev/realms/platform \
+  --exec-arg=--oidc-issuer-url=https://keycloak-inova.amedsaude.com.br/realms/platform \
   --exec-arg=--oidc-client-id=kubernetes \
   --exec-interactive-mode=Never
 kubectl config set-context "$(kubectl config current-context)" --user=oidc-keycloak
@@ -102,9 +102,9 @@ kubectl get nodes
 Each Longhorn UI is behind a dedicated OAuth2 Proxy using Keycloak:
 
 ```text
-https://storage-tools.hackyard.dev
-https://storage-staging.hackyard.dev
-https://storage-production.hackyard.dev
+https://storage-tools.amedsaude.com.br
+https://storage-staging.amedsaude.com.br
+https://storage-production.amedsaude.com.br
 ```
 
 Allowed groups are environment-specific plus `platform-admins`:
@@ -120,7 +120,7 @@ Verify the protected route with:
 ```sh
 kubectl -n flux-system get kustomization longhorn-auth
 kubectl -n longhorn get helmrelease,externalsecret,secret,pods,svc
-curl -I https://storage-tools.hackyard.dev
+curl -I https://storage-tools.amedsaude.com.br
 ```
 
 Unauthenticated requests should redirect to Keycloak; users outside the
@@ -132,7 +132,7 @@ Tools Grafana uses the same Keycloak realm through its generic OAuth
 integration. Only `platform-admins` and `grafana-viewers` can sign in.
 `platform-admins` receive the Grafana Administrator role; `grafana-viewers`
 receive Viewer access. Its Keycloak callback is
-`https://grafana-inova.hackyard.dev/login/generic_oauth`. The first successful
+`https://grafana-inova.amedsaude.com.br/login/generic_oauth`. The first successful
 Keycloak login provisions the Grafana account automatically.
 Grafana reads the Keycloak `groups` claim through
 `groups_attribute_path = groups`; this is required when `allowed_groups` is
@@ -149,5 +149,5 @@ kubectl get clustersecretstore oracle-vault
 kubectl get externalsecret -A
 kubectl -n flux-system get kustomizations
 kubectl -n longhorn logs deploy/longhorn-auth
-curl -fsS https://keycloak-inova.hackyard.dev/realms/platform/.well-known/openid-configuration | jq .issuer
+curl -fsS https://keycloak-inova.amedsaude.com.br/realms/platform/.well-known/openid-configuration | jq .issuer
 ```

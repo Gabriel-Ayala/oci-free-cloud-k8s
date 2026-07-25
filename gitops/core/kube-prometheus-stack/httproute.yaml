@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "prometheus.hackyard.dev"
+    - "prometheus.amedsaude.com.br"
   rules:
     - matches:
         - path:

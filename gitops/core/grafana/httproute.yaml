@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "monitoring.hackyard.dev"
+    - "monitoring.amedsaude.com.br"
   rules:
     - matches:
         - path:

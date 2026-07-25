@@ -284,7 +284,7 @@ realm. Its clients and groups are documented in
 OpenTofu generates the bootstrap administrator password, stores it in OCI
 Vault as `keycloak-tools-admin-password`, and External Secrets syncs it to the
 cluster. The shared Contour Gateway exposes
-`https://keycloak-inova.hackyard.dev` with edge TLS. Custom realms, clients,
+`https://keycloak-inova.amedsaude.com.br` with edge TLS. Custom realms, clients,
 and users are managed in the Keycloak `platform` realm.
 
 Verify it in tools with:
@@ -298,11 +298,11 @@ kubectl -n keycloak get deployment keycloak-operator
 kubectl get crd keycloaks.k8s.keycloak.org keycloakrealmimports.k8s.keycloak.org
 kubectl -n flux-system get kustomization keycloak
 kubectl -n keycloak get externalsecret,secret,keycloak,pods,httproute
-curl -sk --resolve keycloak-inova.hackyard.dev:443:<CONTOUR_PUBLIC_IP> \
-  https://keycloak-inova.hackyard.dev/realms/master/.well-known/openid-configuration
+curl -sk --resolve keycloak-inova.amedsaude.com.br:443:<CONTOUR_PUBLIC_IP> \
+  https://keycloak-inova.amedsaude.com.br/realms/master/.well-known/openid-configuration
 ```
 
-The explicit Cloudflare DNS-only A record for `keycloak-inova.hackyard.dev`
+The explicit Cloudflare DNS-only A record for `keycloak-inova.amedsaude.com.br`
 must target the tools Contour LoadBalancer (`163.176.140.27`). Do not rely on
 the proxied wildcard record, because it targets a different cluster. If the
 record is changed to proxied mode, use an SSL mode compatible with the origin
@@ -331,7 +331,7 @@ Contour HelmRelease and Gateway API CRDs first; `contour-gateway` then creates
 the GatewayClass, Gateway, and certificate after those CRDs and cert-manager
 are ready.
 
-The shared Gateway listens on HTTP and HTTPS for `*.hackyard.dev` in every
+The shared Gateway listens on HTTP and HTTPS for `*.amedsaude.com.br` in every
 cluster. HTTPS uses the cert-manager `letsencrypt` ClusterIssuer and the
 Cloudflare DNS01 token stored in OCI Vault. Applications should use
 `HTTPRoute` resources with:
@@ -369,10 +369,10 @@ roots use the self-contained provider configuration from
 the full shared profile. The current minimal tools root does not include
 ExternalDNS.
 
-ExternalDNS manages Cloudflare records for `hackyard.dev` from Kubernetes
+ExternalDNS manages Cloudflare records for the configured AMED zones from Kubernetes
 Services, Ingresses, and Gateway API `HTTPRoute` resources. It uses the
 Cloudflare API token synchronized from OCI Vault by External Secrets, and the
-token is restricted to the `hackyard.dev` zone. The configured policy is
+token is restricted to the configured AMED zones. The configured policy is
 `sync`, so review route annotations and generated records before exposing a
 workload.
 
@@ -399,9 +399,9 @@ StorageClass is the cluster default; use it when OCI-managed block storage is
 preferred. Each cluster has a distinct HTTPS route for the Longhorn UI:
 
 ```text
-tools      -> https://storage-tools.hackyard.dev
-staging    -> https://storage-staging.hackyard.dev
-production -> https://storage-production.hackyard.dev
+tools      -> https://storage-tools.amedsaude.com.br
+staging    -> https://storage-staging.amedsaude.com.br
+production -> https://storage-production.amedsaude.com.br
 ```
 
 The tools DNS record is managed outside the minimal tools ExternalDNS profile;
@@ -558,7 +558,7 @@ kubectl get externalsecret -A
 Grafana is a standalone HelmRelease in the `grafana` namespace. It uses a
 ClusterIP service behind the tools Contour Gateway, direct Keycloak OAuth
 authentication, disabled persistence, and the OCI Metrics datasource plugin. Its public route
-is `https://grafana-inova.hackyard.dev`; Cloudflare DNS must point that name to
+is `https://grafana-inova.amedsaude.com.br`; Cloudflare DNS must point that name to
 the tools Contour load-balancer address.
 
 Access it locally with:
@@ -577,7 +577,7 @@ curl http://127.0.0.1:3000/api/health
 The public route can be checked after DNS and certificate propagation with:
 
 ```sh
-curl -I https://grafana-inova.hackyard.dev/
+curl -I https://grafana-inova.amedsaude.com.br/
 ```
 
 The Grafana OCI IAM policy is managed by Terraform. Review and tighten the

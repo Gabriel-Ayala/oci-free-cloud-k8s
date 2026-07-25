@@ -8,7 +8,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - keycloak-inova.hackyard.dev
+    - keycloak-inova.amedsaude.com.br
   rules:
     - matches:
         - path:

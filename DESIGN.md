@@ -48,14 +48,14 @@ provided.
 
 Contour is the ingress controller in all three clusters. Its Envoy data plane
 runs as two replicas behind an OCI LoadBalancer Service. Each cluster creates
-a Gateway API `Gateway` with HTTP and HTTPS listeners for `*.hackyard.dev`.
+a Gateway API `Gateway` with HTTP and HTTPS listeners for `*.amedsaude.com.br`.
 Cert-manager obtains the wildcard certificate using the Cloudflare DNS01
 issuer and the Cloudflare token stored in OCI Vault.
 
 ExternalDNS is enabled in staging and production. It watches Services,
 Ingresses, CRD sources, and Gateway API HTTPRoutes, is filtered to the
-`hackyard.dev` zone, and manages A records with `sync` policy. The tools
-Grafana route uses `grafana-inova.hackyard.dev`; its Cloudflare record is
+the configured AMED zones, and manages A records with `sync` policy. The tools
+Grafana route uses `grafana-inova.amedsaude.com.br`; its Cloudflare record is
 managed outside the current minimal tools ExternalDNS profile. ExternalDNS
 uses a unique TXT owner ID per cluster so staging and production do not manage
 or delete each other’s records.
@@ -97,8 +97,8 @@ required iSCSI service and installs the NFS/cryptsetup/device-mapper packages.
 The current disk is the worker boot volume; production requires a dedicated
 storage-disk design and backup/recovery runbook before using it for important
 data. Each cluster exposes the UI through its own route:
-`storage-tools.hackyard.dev`, `storage-staging.hackyard.dev`, or
-`storage-production.hackyard.dev`. This administrative surface must be
+`storage-tools.amedsaude.com.br`, `storage-staging.amedsaude.com.br`, or
+`storage-production.amedsaude.com.br`. This administrative surface must be
 protected before general use.
 
 Longhorn backups use OCI Object Storage through its S3-compatible API. The
@@ -168,11 +168,11 @@ the OperatorHub catalog. The Subscription uses the `fast` channel with manual
 InstallPlan approval and an `OwnNamespace` OperatorGroup in `keycloak`. This
 keeps the identity operator scoped to the tools cluster and its own namespace.
 The `gitops/core/keycloak` manifests deploy two Keycloak instances at
-`https://keycloak-inova.hackyard.dev`, using the CNPG read-write service and
+`https://keycloak-inova.amedsaude.com.br`, using the CNPG read-write service and
 the dedicated `platform` realm. OpenTofu generates the bootstrap admin password and
 stores it in OCI Vault; External Secrets creates the bootstrap Secret. The
 HTTPRoute uses the shared Contour Gateway with edge TLS. Cloudflare DNS uses
-an explicit DNS-only A record for `keycloak-inova.hackyard.dev` pointing to
+an explicit DNS-only A record for `keycloak-inova.amedsaude.com.br` pointing to
 the tools LoadBalancer; it must not fall through to the proxied wildcard
 record for another cluster. The realm provides direct OIDC clients for the
 Kubernetes API, Grafana, and the protected Longhorn UIs.

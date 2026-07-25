@@ -38,8 +38,8 @@ spec:
     grafana.ini:
       app_mode: production
       server:
-        domain: grafana-inova.hackyard.dev
-        root_url: https://grafana-inova.hackyard.dev
+        domain: grafana-inova.amedsaude.com.br
+        root_url: https://grafana-inova.amedsaude.com.br
       users:
         allow_sign_up: false
       auth:
@@ -55,9 +55,9 @@ spec:
         allowed_groups: platform-admins grafana-viewers
         groups_attribute_path: groups
         email_attribute_path: email
-        auth_url: https://keycloak-inova.hackyard.dev/realms/platform/protocol/openid-connect/auth
-        token_url: https://keycloak-inova.hackyard.dev/realms/platform/protocol/openid-connect/token
-        api_url: https://keycloak-inova.hackyard.dev/realms/platform/protocol/openid-connect/userinfo
+        auth_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/auth
+        token_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/token
+        api_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/userinfo
         role_attribute_path: contains(groups[*], 'platform-admins') && 'Admin' || 'Viewer'
     extraSecretMounts:
       - name: keycloak-client

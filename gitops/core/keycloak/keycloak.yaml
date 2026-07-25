@@ -29,7 +29,7 @@ spec:
     user:
       secret: keycloak-bootstrap-admin
   hostname:
-    hostname: https://keycloak-inova.hackyard.dev
+    hostname: https://keycloak-inova.amedsaude.com.br
   proxy:
     headers: xforwarded
   http:

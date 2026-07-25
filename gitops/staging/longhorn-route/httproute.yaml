@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "storage-staging.hackyard.dev"
+    - "storage-staging.amedsaude.com.br"
   rules:
     - matches:
         - path:

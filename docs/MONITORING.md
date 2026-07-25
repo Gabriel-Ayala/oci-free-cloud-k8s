@@ -126,7 +126,7 @@ kubectl -n monitoring port-forward svc/kube-prometheus-stack-prometheus 9090:909
 curl -fsS http://127.0.0.1:9090/api/v1/status/runtimeinfo
 ```
 
-Then sign in to <https://grafana-inova.hackyard.dev>, open Explore, select
+Then sign in to <https://grafana-inova.amedsaude.com.br>, open Explore, select
 `Mimir`, and query `up` or `kube_node_info`.
 
 Grafana's Generic OAuth configuration must set both `allowed_groups` and

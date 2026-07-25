@@ -43,5 +43,22 @@ spec:
             key: apiKey
     extraArgs:
       - --exclude-target-net=10.0.0.0/8
-      - --domain-filter=hackyard.dev
+      - --domain-filter=amedsaude.com.br
+      - --domain-filter=amedpy.com
+      - --domain-filter=cms-sync.com.br
+      - --domain-filter=coomedms.com.br
+      - --domain-filter=drpap.com.br
+      - --domain-filter=drpap.uy
+      - --domain-filter=helppap.com
+      - --domain-filter=infectoassist.com.br
+      - --domain-filter=inovapap.com.br
+      - --domain-filter=monitoramentoemsaude.com.br
+      - --domain-filter=moveye.com.br
+      - --domain-filter=papeduca.com.br
+      - --domain-filter=papensino.com.br
+      - --domain-filter=papescala.com.br
+      - --domain-filter=papinfecto.com.br
+      - --domain-filter=pap-sync.com.br
+      - --domain-filter=perreabilita.com.br
+      - --domain-filter=qualiassist.com.br
       - --txt-owner-id=${EXTERNALDNS_TXT_OWNER_ID:=core}

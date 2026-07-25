@@ -29,8 +29,8 @@ spec:
     grafana.ini:
       app_mode: production
       server:
-        domain: monitoring.hackyard.dev
-        root_url: https://monitoring.hackyard.dev
+        domain: monitoring.amedsaude.com.br
+        root_url: https://monitoring.amedsaude.com.br
 
       users:
         allow_sign_up: false
@@ -48,9 +48,9 @@ spec:
         ;empty_scopes: false
         email_attribute_path: email
         ;id_token_attribute_name:
-        auth_url: https://login.hackyard.dev/dex/auth
-        token_url: https://login.hackyard.dev/dex/token
-        api_url: https://login.hackyard.dev/dex/userinfo
+        auth_url: https://login.amedsaude.com.br/dex/auth
+        token_url: https://login.amedsaude.com.br/dex/token
+        api_url: https://login.amedsaude.com.br/dex/userinfo
         role_attribute_path: contains(groups[*], 'nce-acme:admin') && 'Admin' || 'Viewer'
 
     extraSecretMounts:

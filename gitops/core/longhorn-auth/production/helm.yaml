@@ -31,8 +31,8 @@ spec:
       existingSecret: longhorn-keycloak-client
       configFile: |-
         provider = "keycloak-oidc"
-        oidc_issuer_url = "https://keycloak-inova.hackyard.dev/realms/platform"
-        redirect_url = "https://storage-production.hackyard.dev/oauth2/callback"
+        oidc_issuer_url = "https://keycloak-inova.amedsaude.com.br/realms/platform"
+        redirect_url = "https://storage-production.amedsaude.com.br/oauth2/callback"
         upstreams = ["http://longhorn-frontend.longhorn.svc.cluster.local:80"]
         email_domains = ["*"]
         allowed_groups = ["longhorn-production-admins", "platform-admins"]

@@ -1,11 +1,11 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: wildcard-hackyard-dev
+  name: wildcard-amedsaude-com-br
 spec:
   dnsNames:
-    - "*.hackyard.dev"
+    - "*.amedsaude.com.br"
   issuerRef:
     name: letsencrypt
     kind: ClusterIssuer
-  secretName: wildcard-hackyard-dev-tls-cert
+  secretName: wildcard-amedsaude-com-br-tls-cert

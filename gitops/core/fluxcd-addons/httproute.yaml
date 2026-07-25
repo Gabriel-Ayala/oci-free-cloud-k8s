@@ -7,7 +7,7 @@ spec:
     - name: contour
       namespace: contour
   hostnames:
-    - "flux-webhook.hackyard.dev"
+    - "flux-webhook.amedsaude.com.br"
   rules:
     - matches:
         - path:

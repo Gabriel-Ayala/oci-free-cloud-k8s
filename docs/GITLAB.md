@@ -116,6 +116,32 @@ unattended security updates, restricts GitLab TLS to TLS 1.2/1.3, enables HSTS,
 disables TLS session tickets, disables public signup, and rate-limits Git HTTP
 Basic authentication attempts.
 
+## GitLab configuration stack
+
+GitLab resources and instance settings are managed separately from the OCI VM:
+
+```text
+live/oci/gitlab/                  VM stack
+live/oci/gitlab/config/           Terragrunt wrapper
+terraform/modules/gitlab-vm/      reusable OCI VM module
+terraform/gitlab-config/          GitLab provider stack
+```
+
+Set `GITLAB_TOKEN` and run the configuration stack only after GitLab is
+reachable:
+
+```sh
+export GITLAB_BASE_URL=https://gitlab.amedsaude.com.br/api/v4/
+export GITLAB_TOKEN='...'
+terragrunt --working-dir live/oci/gitlab/config plan
+```
+
+The stack defaults to instance security settings and creates no groups or
+projects until they are explicitly added to `managed_groups` and
+`managed_projects`. The provider supports groups, projects, memberships,
+variables, protected branches, runners, and hooks; keep tokens and secret
+values outside the repository.
+
 ## First-boot checks
 
 ```sh

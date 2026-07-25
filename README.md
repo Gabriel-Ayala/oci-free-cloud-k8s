@@ -44,13 +44,14 @@ pod, and service CIDRs unique.
 live/oci/
 ├── root.hcl
 ├── drg/                         Shared DRG Terragrunt stack
-├── gitlab/                      Dedicated GitLab CE VM stack
+├── gitlab/                      Dedicated GitLab CE VM and config stacks
 └── clusters/
     ├── tools/{network,oke,config}
     ├── staging/{network,oke,config}
     └── production/{network,oke,config}
 
-terraform/modules/               Reusable DRG, network, and OKE modules
+terraform/modules/               Reusable DRG, network, OKE, and GitLab VM modules
+terraform/gitlab-config/         GitLab provider configuration stack
 gitops/core/                     Shared Flux application manifests
 gitops/tools/                    Tools Flux root and Grafana
 gitops/staging/                  Staging Flux root

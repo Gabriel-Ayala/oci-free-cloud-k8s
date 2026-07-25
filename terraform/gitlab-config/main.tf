@@ -13,6 +13,7 @@ resource "gitlab_application_settings" "instance" {
   dns_rebinding_protection_enabled           = true
   enabled_git_access_protocol                = "ssh"
   gravatar_enabled                           = false
+  import_sources                             = ["github", "bitbucket", "bitbucket_server", "fogbugz", "git", "gitlab_project", "gitea", "manifest"]
   password_authentication_enabled_for_git    = false
   password_authentication_enabled_for_web    = true
   pages_domain_verification_enabled          = true

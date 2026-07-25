@@ -22,5 +22,17 @@ inputs = {
       description = "Application source code and delivery projects"
       visibility  = "private"
     }
+    developers = {
+      name        = "Developers"
+      path        = "developers"
+      description = "GitLab permission group for application developers"
+      visibility  = "private"
+    }
+    platform_users = {
+      name        = "Platform Users"
+      path        = "platform-users"
+      description = "GitLab permission group for platform users"
+      visibility  = "private"
+    }
   }
 }

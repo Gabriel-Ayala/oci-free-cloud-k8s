@@ -162,10 +162,21 @@ The configuration stack currently manages these private top-level groups:
 | --- | --- | --- |
 | Platform | `platform` | Infrastructure, platform engineering, and shared services |
 | Applications | `applications` | Application source code and delivery projects |
+| Developers | `developers` | Permission group for application developers |
+| Platform Users | `platform-users` | Permission group for platform users |
 
 Add projects under these groups by editing `managed_projects` in
 `live/oci/gitlab/config/terragrunt.hcl`. A project’s `namespace_group` must
 reference either `platform` or `applications`.
+
+`Developers` and `Platform Users` are separate permission groups. They are not
+project namespaces and are intentionally not nested under `Platform` or
+`Applications`; this keeps access assignments independent from project layout.
+Add members to these groups in GitLab and assign the required role at the
+group or project level. The existing Keycloak groups (`platform-admins`,
+`platform-viewers`, and environment-specific groups) remain the source of
+truth for OKE and platform-service permissions; GitLab group membership does
+not automatically create Keycloak or Kubernetes permissions.
 
 After changing the configuration:
 

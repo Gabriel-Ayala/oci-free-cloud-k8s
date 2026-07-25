@@ -23,10 +23,11 @@ resource "gitlab_application_settings" "instance" {
 resource "gitlab_group" "managed" {
   for_each = var.managed_groups
 
-  name             = each.value.name
-  path             = each.value.path
-  description      = each.value.description
-  visibility_level = each.value.visibility
+  name                   = each.value.name
+  path                   = each.value.path
+  description            = each.value.description
+  visibility_level       = each.value.visibility
+  project_creation_level = each.value.project_creation_level
 }
 
 resource "gitlab_project" "managed" {

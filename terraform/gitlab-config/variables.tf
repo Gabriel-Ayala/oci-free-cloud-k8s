@@ -24,10 +24,11 @@ variable "manage_application_settings" {
 
 variable "managed_groups" {
   type = map(object({
-    name        = string
-    path        = string
-    description = optional(string, "")
-    visibility  = optional(string, "private")
+    name                   = string
+    path                   = string
+    description            = optional(string, "")
+    visibility             = optional(string, "private")
+    project_creation_level = optional(string, "maintainer")
   }))
   description = "Top-level GitLab groups to manage. Empty by default."
   default     = {}

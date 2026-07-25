@@ -23,4 +23,15 @@ inputs = {
       visibility  = "private"
     }
   }
+
+  managed_projects = {
+    platform_control = {
+      name                   = "Platform Control"
+      namespace_group        = "platform"
+      description            = "Platform control plane, automation, and infrastructure configuration"
+      visibility             = "private"
+      initialize_with_readme = true
+      default_branch         = "main"
+    }
+  }
 }

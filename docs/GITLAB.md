@@ -1,8 +1,18 @@
-# GitLab CE VM
+# GitLab CE
 
 GitLab CE is deployed as a dedicated OCI Compute VM rather than as a workload
 on OKE. This keeps GitLab independent from the tools cluster and avoids adding
 GitLab's PostgreSQL, Redis, and persistent storage requirements to Kubernetes.
+
+The public service URL is:
+
+```text
+https://gitlab.amedsaude.com.br
+```
+
+The VM uses an OCI Ampere A1 Flex shape, a persistent OCI Block Volume mounted
+at `/var/opt/gitlab`, and the tools public subnet. GitLab's bundled PostgreSQL,
+Redis, Gitaly, Puma, Sidekiq, Workhorse, and NGINX run on the VM.
 
 ## Provisioning
 
@@ -144,14 +154,64 @@ projects until they are explicitly added to `managed_groups` and
 variables, protected branches, runners, and hooks; keep tokens and secret
 values outside the repository.
 
+### Managed groups
+
+The configuration stack currently manages these private top-level groups:
+
+| Group | Path | Purpose |
+| --- | --- | --- |
+| Platform | `platform` | Infrastructure, platform engineering, and shared services |
+| Applications | `applications` | Application source code and delivery projects |
+
+Add projects under these groups by editing `managed_projects` in
+`live/oci/gitlab/config/terragrunt.hcl`. A project’s `namespace_group` must
+reference either `platform` or `applications`.
+
+After changing the configuration:
+
+```sh
+set -a
+source .env
+set +a
+export GITLAB_BASE_URL=https://gitlab.amedsaude.com.br/api/v4/
+terragrunt --working-dir live/oci/gitlab/config plan
+terragrunt --working-dir live/oci/gitlab/config apply
+```
+
+Do not create or rename managed groups manually in the GitLab UI; Terraform
+state is the source of truth for resources declared in the stack.
+
+## Administrator access
+
+The initial Omnibus administrator is `root`. Retrieve the one-time bootstrap
+password directly on the VM and change it immediately:
+
+```sh
+ssh ubuntu@<public-ip>
+sudo cat /etc/gitlab/initial_root_password
+```
+
+Use the local root account as an emergency break-glass account until Keycloak
+login has been tested with an administrator identity. OIDC users are initially
+blocked for administrator approval. Git operations use SSH keys or GitLab
+personal/deploy tokens; Git HTTP password authentication is disabled.
+
 ## First-boot checks
 
 ```sh
 ssh ubuntu@<public-ip> sudo gitlab-ctl status
 ssh ubuntu@<public-ip> sudo gitlab-rake gitlab:check SANITIZE=true
-curl --fail --location https://gitlab.amedsaude.com.br/-/health
+curl --fail --location --silent --show-error \
+  https://gitlab.amedsaude.com.br/users/sign_in >/dev/null
+curl --fail --location --silent --show-error \
+  https://keycloak-inova.amedsaude.com.br/realms/platform/.well-known/openid-configuration \
+  | jq -e '.issuer == "https://keycloak-inova.amedsaude.com.br/realms/platform"'
 git clone git@gitlab.amedsaude.com.br:group/project.git
 ```
+
+Confirm the sign-in page contains the `Sign in with Keycloak` button. For a
+provider health check, verify the Keycloak client callback remains exactly
+`https://gitlab.amedsaude.com.br/users/auth/openid_connect/callback`.
 
 The initial root password is available only on the VM:
 
@@ -175,6 +235,33 @@ Create an OCI backup policy for the `gitlab-data` volume and periodically test
 restoring the volume and GitLab backup to an isolated VM. Repository data,
 database data, uploaded artifacts, and the GitLab secrets file must all be
 covered by the recovery procedure.
+
+At minimum, retain:
+
+- GitLab application backups from `/var/opt/gitlab/backups`.
+- The `gitlab-data` OCI Block Volume or its OCI volume backups.
+- `/etc/gitlab/gitlab-secrets.json`.
+- `/etc/gitlab/gitlab.rb`, including the OIDC configuration.
+- The Keycloak GitLab client secret, stored separately with restricted access.
+
+Test both a GitLab application restore and a complete VM/volume recovery
+before relying on the installation for production repositories.
+
+## Upgrade and maintenance
+
+Check the current status before upgrades:
+
+```sh
+ssh ubuntu@<public-ip> sudo gitlab-ctl status
+ssh ubuntu@<public-ip> sudo gitlab-rake gitlab:check SANITIZE=true
+ssh ubuntu@<public-ip> sudo gitlab-ctl backup-etc
+```
+
+Create and verify a backup before upgrading GitLab. Keep the GitLab package
+version pinned in `gitlab_package_version` when a controlled upgrade is
+required; otherwise the VM module installs the newest package available from
+the GitLab repository during provisioning. Re-run `gitlab-ctl reconfigure`
+after changing `/etc/gitlab/gitlab.rb`.
 
 Do not commit the VM state, kubeconfigs, `.env`, GitLab secrets, or initial
 password to this repository.

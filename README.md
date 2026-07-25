@@ -363,6 +363,10 @@ Cloudflare policy have been reviewed.
 
 ## ExternalDNS
 
+See the [ExternalDNS operations guide](docs/EXTERNAL_DNS.md) for the cluster
+ownership model, Cloudflare/Vault credential flow, managed zones, certificate
+boundary, and reconciliation commands.
+
 Staging and production run ExternalDNS in the `external-dns` namespace. Both
 roots use the self-contained provider configuration from
 `gitops/core/external-dns/resources`; this avoids coupling their Flux paths to

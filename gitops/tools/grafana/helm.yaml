@@ -56,8 +56,8 @@ spec:
         groups_attribute_path: groups
         email_attribute_path: email
         auth_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/auth
-        token_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/token
-        api_url: https://keycloak-inova.amedsaude.com.br/realms/platform/protocol/openid-connect/userinfo
+        token_url: http://keycloak.keycloak.svc.cluster.local:8080/realms/platform/protocol/openid-connect/token
+        api_url: http://keycloak.keycloak.svc.cluster.local:8080/realms/platform/protocol/openid-connect/userinfo
         role_attribute_path: contains(groups[*], 'platform-admins') && 'Admin' || 'Viewer'
     extraSecretMounts:
       - name: keycloak-client

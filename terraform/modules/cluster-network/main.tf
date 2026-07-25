@@ -117,15 +117,19 @@ resource "oci_core_security_list" "public" {
     }
   }
 
-  ingress_security_rules {
-    stateless   = false
-    source      = "0.0.0.0/0"
-    source_type = "CIDR_BLOCK"
-    protocol    = "6"
+  dynamic "ingress_security_rules" {
+    for_each = var.public_ingress_tcp_ports
 
-    tcp_options {
-      min = 6443
-      max = 6443
+    content {
+      stateless   = false
+      source      = "0.0.0.0/0"
+      source_type = "CIDR_BLOCK"
+      protocol    = "6"
+
+      tcp_options {
+        min = ingress_security_rules.value
+        max = ingress_security_rules.value
+      }
     }
   }
 }

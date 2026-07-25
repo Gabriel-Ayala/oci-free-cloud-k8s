@@ -55,3 +55,9 @@ variable "mimir_private_ip_address" {
   type        = string
   default     = ""
 }
+
+variable "public_ingress_tcp_ports" {
+  description = "TCP ports exposed on the public subnet"
+  type        = list(number)
+  default     = [6443]
+}

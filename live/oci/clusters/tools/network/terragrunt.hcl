@@ -26,4 +26,5 @@ inputs = {
   drg_route_table_id       = dependency.drg.outputs.drg_route_table_id
   reserve_mimir_private_ip = true
   mimir_private_ip_address = "10.10.1.250"
+  public_ingress_tcp_ports = [22, 80, 443, 6443]
 }

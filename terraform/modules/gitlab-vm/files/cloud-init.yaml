@@ -1,0 +1,61 @@
+#cloud-config
+package_update: true
+packages:
+  - ca-certificates
+  - curl
+  - openssh-server
+  - tzdata
+  - perl
+
+write_files:
+  - path: /etc/systemd/system/gitlab-public-firewall.service
+    permissions: '0644'
+    content: |
+      [Unit]
+      Description=Allow GitLab HTTP and HTTPS traffic
+      After=network-online.target
+      Wants=network-online.target
+
+      [Service]
+      Type=oneshot
+      ExecStart=/bin/sh -c "iptables -C INPUT -p tcp --dport 80 -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p tcp --dport 80 -j ACCEPT; iptables -C INPUT -p tcp --dport 443 -j ACCEPT 2>/dev/null || iptables -I INPUT 5 -p tcp --dport 443 -j ACCEPT"
+      RemainAfterExit=yes
+
+      [Install]
+      WantedBy=multi-user.target
+
+  - path: /usr/local/sbin/prepare-gitlab-data
+    permissions: '0750'
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      device=/dev/oracleoci/oraclevdb
+      mountpoint=/var/opt/gitlab
+      for attempt in $(seq 1 60); do
+        [[ -b "$device" ]] && break
+        sleep 5
+      done
+      [[ -b "$device" ]] || { echo "GitLab data volume did not appear" >&2; exit 1; }
+
+      if ! blkid "$device" >/dev/null 2>&1; then
+        mkfs.ext4 -L gitlab-data "$device"
+      fi
+
+      mkdir -p "$mountpoint"
+      uuid=$(blkid -s UUID -o value "$device")
+      grep -q "UUID=$uuid" /etc/fstab || echo "UUID=$uuid $mountpoint ext4 defaults,noatime 0 2" >> /etc/fstab
+      mountpoint -q "$mountpoint" || mount "$mountpoint"
+
+runcmd:
+  - /usr/local/sbin/prepare-gitlab-data
+  - systemctl daemon-reload
+  - systemctl enable --now gitlab-public-firewall.service
+  - mkdir -p /etc/apt/keyrings
+  - curl --fail --silent --show-error --location https://packages.gitlab.com/install/repositories/gitlab/gitlab-ce/script.deb.sh | bash
+  - >-
+    bash -c 'export GITLAB_OMNIBUS_CONFIG="letsencrypt['"'"'enable'"'"'] = false; gitlab_rails['"'"'nginx'"'"']['"'"'redirect_http_to_https'"'"'] = true";
+    if [ -n "${gitlab_package_version}" ]; then
+    EXTERNAL_URL="${external_url}" apt-get install -y gitlab-ce="${gitlab_package_version}";
+    else EXTERNAL_URL="${external_url}" apt-get install -y gitlab-ce; fi'
+  - gitlab-ctl reconfigure

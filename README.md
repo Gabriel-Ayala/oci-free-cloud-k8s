@@ -44,6 +44,7 @@ pod, and service CIDRs unique.
 live/oci/
 ├── root.hcl
 ├── drg/                         Shared DRG Terragrunt stack
+├── gitlab/                      Dedicated GitLab CE VM stack
 └── clusters/
     ├── tools/{network,oke,config}
     ├── staging/{network,oke,config}
@@ -58,6 +59,7 @@ scripts/deploy-minimal.sh        Sequential deployment helper
 docs/MULTI_CLUSTER.md            Detailed design and extraction notes
 docs/MONITORING.md               Tools monitoring stack and operations
 docs/DATABASE_ACCESS.md          Database architecture and access runbook
+docs/GITLAB.md                   GitLab CE VM deployment and recovery runbook
 ```
 
 ## Requirements

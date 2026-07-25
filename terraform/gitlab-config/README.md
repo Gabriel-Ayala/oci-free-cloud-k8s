@@ -12,8 +12,10 @@ this repository, a `.tfvars` file, or Terraform CLI arguments.
 ## Usage
 
 ```sh
+set -a
+source .env
+set +a
 export GITLAB_BASE_URL=https://gitlab.amedsaude.com.br/api/v4/
-export GITLAB_TOKEN='...'
 
 terragrunt --working-dir live/oci/gitlab/config init
 terragrunt --working-dir live/oci/gitlab/config plan

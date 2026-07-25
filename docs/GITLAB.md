@@ -131,8 +131,10 @@ Set `GITLAB_TOKEN` and run the configuration stack only after GitLab is
 reachable:
 
 ```sh
+set -a
+source .env
+set +a
 export GITLAB_BASE_URL=https://gitlab.amedsaude.com.br/api/v4/
-export GITLAB_TOKEN='...'
 terragrunt --working-dir live/oci/gitlab/config plan
 ```
 
